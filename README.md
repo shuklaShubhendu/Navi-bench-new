@@ -2,9 +2,15 @@
 
 ## Executive Summary
 
-This document outlines the complete implementation plan for a JavaScript-based verifier for **www.stubhub.com**. The verifier will validate AI agent ticket search results by gathering event information through DOM scraping and matching against expected queries.
+This document outlines the complete implementation for a JavaScript-based verifier for **www.stubhub.com**. The verifier validates AI agent ticket search results by gathering event information through DOM scraping and LD+JSON extraction, with **stack-based navigation tracking** for accurate verification.
 
-**Implementation Reference:** Based on the proven [OpenTable verifier pattern](https://github.com/yutori-ai/navi-bench/tree/main/navi_bench/opentable)
+**Key Features Implemented:**
+- ✅ Stack-based navigation tracking with URL de-duplication
+- ✅ Smart page-type matching (strict for event pages, lenient for category pages)
+- ✅ LD+JSON priority for reliable data extraction
+- ✅ Multi-currency support (USD, INR, EUR, GBP)
+- ✅ Comprehensive query matching with 30+ fields
+- ✅ Demo scenarios (Coldplay Israel, Zakir Khan Pune, NBA, etc.)
 
 ---
 
@@ -81,11 +87,21 @@ Build a verification system that can:
 
 ```
 1. Agent navigates to StubHub page
-2. JavaScript scraper extracts data from DOM
-3. Data passed to Python verifier
-4. Verifier matches against expected queries
-5. Coverage score calculated and returned
+2. JavaScript scraper extracts data from DOM + LD+JSON
+3. Page visit pushed to navigation stack (URL de-duplicated)
+4. On completion, compute() walks stack backwards
+5. If event_listing found → STRICT match that event
+6. Else fallback to category pages → LENIENT match
+7. Coverage score calculated and returned
 ```
+
+### 2.3 Stack-Based Matching Logic
+
+| Final Page Type | Matching Behavior | Use Case |
+|-----------------|-------------------|----------|
+| `event_listing` | Strict - only match that event | User clicked into specific event |
+| `event_category` | Lenient - match any visible | Sold-out events, category browse |
+| `search_results` | Lenient - match any visible | Search flow |
 
 ---
 
@@ -327,15 +343,22 @@ handleArtistVenuePage() → results[]
 {
     url: string,           // Current page URL
     eventName: string,     // Event name
+    eventCategory: string, // "concerts", "sports", etc.
     date: string,          // YYYY-MM-DD
-    time: string,          // HH:MM:SS
     venue: string,         // Venue name
-    city: string,          // City name
+    city: string,          // City name (from LD+JSON or URL)
+    country: string,       // Country name
     section: string,       // Seat section
     row: string,           // Seat row
-    price: number,         // Price in USD
+    price: number,         // Price in local currency
+    priceRange: {low, high, currency}, // From LD+JSON
     ticketCount: number,   // Number of tickets
-    info: string           // "available", "sold_out", "limited"
+    ticketType: string,    // "standard", "vip", "floor", etc.
+    deliveryType: string,  // "electronic", "mobile", etc.
+    availabilityStatus: string, // "available", "sold_out", "limited", "get_notified"
+    pageType: string,      // "event_listing", "event_category", "home", etc.
+    source: string,        // "structured_data", "data-listing", "dom"
+    info: string           // "available", "sold_out", "ld+json"
 }
 ```
 
@@ -349,19 +372,26 @@ handleArtistVenuePage() → results[]
 
 ```python
 class StubHubInfoGathering(BaseMetric):
-    """Gather event ticket information from StubHub."""
+    """Gather event ticket information from StubHub with stack-based tracking."""
     
     def __init__(self, queries: list[list[MultiCandidateQuery]]) -> None:
         """Initialize with expected queries."""
     
     async def reset(self) -> None:
-        """Reset tracking state."""
+        """Reset tracking state and navigation stack."""
+        self._navigation_stack = []  # Stack-based tracking
     
     async def update(self, page: Page) -> None:
-        """Process page and update coverage."""
+        """Process page, determine type, push to stack."""
+        # Runs JavaScript scraper
+        # Determines page_type (event_listing, event_category, etc.)
+        # De-duplicates by base URL
+        # Pushes to navigation stack
     
     async def compute(self) -> FinalResult:
-        """Calculate final coverage score."""
+        """Walk stack backwards, apply strict/lenient matching."""
+        # Priority 1: Find event_listing → strict match
+        # Priority 2: Fallback to category pages → lenient match
 ```
 
 ### 5.3 Query Structures
@@ -646,11 +676,13 @@ def get_date_range(start_offset: int, end_offset: int) -> list[str]:
 
 ### 11.4 Total Deliverables
 
-- **6-8 files**
-- **~1,500+ lines of code**
+- **Core Files:** `stubhub_info_gathering.js`, `stubhub_info_gathering.py`
+- **Demo:** `demo_stubhub.py` with scenarios (Coldplay Israel, Zakir Khan Pune, NBA, etc.)
+- **Tests:** `test_stubhub.py`, `test_stubhub_unit.py`
+- **~2,000+ lines of code**
 - **100+ edge cases covered**
-- **30+ unit tests**
-- **Complete documentation**
+- **Stack-based navigation tracking**
+- **Multi-currency support (USD, INR, EUR, GBP)**
 
 ---
 
@@ -774,7 +806,7 @@ def get_date_range(start_offset: int, end_offset: int) -> list[str]:
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** December 19, 2025  
+**Document Version:** 2.0  
+**Last Updated:** December 30, 2025  
 **Author:** Navi-Bench Development Team  
-**Status:** Complete Specification
+**Status:** Production Ready
