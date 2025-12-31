@@ -150,7 +150,7 @@ class InfoDict(TypedDict, total=False):
     zone: str
     row: str
     seat: str
-    aisleSeay: bool
+    aisleSeat: bool
     
     # Pricing
     price: float
@@ -273,6 +273,58 @@ class StubHubInfoGathering(BaseMetric):
         # Navigation stack for page-type based matching (walk backwards to find event_listing)
         # Each entry: {"url": str, "page_type": str, "infos": list[InfoDict]}
         self._navigation_stack: list[dict] = []
+        # Track pages for attach_to_context
+        self._tracked_pages: set = set()
+    
+    def attach_to_context(self, context) -> None:
+        """
+        Attach automatic navigation tracking to a browser context.
+        
+        This enables self-contained tracking - all page navigations and new tabs
+        will be automatically tracked without the caller needing to set up handlers.
+        
+        Usage:
+            verifier = StubHubInfoGathering(queries=queries)
+            await verifier.reset()
+            verifier.attach_to_context(context)  # Auto-tracks everything
+            
+            # ... user navigates ...
+            
+            result = await verifier.compute()
+        
+        Args:
+            context: Playwright BrowserContext to attach tracking to
+        """
+        import asyncio
+        
+        async def track_page(page) -> None:
+            """Attach navigation tracking to a single page."""
+            page_id = id(page)
+            if page_id in self._tracked_pages:
+                return
+            self._tracked_pages.add(page_id)
+            
+            async def on_frame_navigated(frame):
+                """Handle navigation events on this page."""
+                if frame != page.main_frame:
+                    return  # Only track main frame
+                
+                try:
+                    logger.info(f"[NAV] {page.url[:80]}...")
+                    await self.update(page=page)
+                except Exception as e:
+                    logger.warning(f"Update failed: {e}")
+            
+            page.on("framenavigated", lambda f: asyncio.create_task(on_frame_navigated(f)))
+            logger.info(f"Tracking attached to page: {page.url[:60]}...")
+        
+        # Track existing pages
+        for page in context.pages:
+            import asyncio
+            asyncio.create_task(track_page(page))
+        
+        # Track new pages (tabs/popups)
+        context.on("page", lambda p: asyncio.create_task(track_page(p)))
 
     async def update(self, **kwargs) -> None:
         """Update with new page information."""

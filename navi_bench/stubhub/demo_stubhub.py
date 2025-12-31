@@ -167,82 +167,7 @@ SCENARIOS: list[TaskScenario] = [
 ]
 
 
-# =============================================================================
-# NAVIGATION TRACKER - Real-time page state monitoring
-# =============================================================================
 
-class NavigationTracker:
-    """
-    Tracks navigation events across all pages in a browser context.
-    Provides real-time updates to the evaluator as the user navigates.
-    """
-    
-    def __init__(self, evaluator: StubHubInfoGathering, verbose: bool = True):
-        self.evaluator = evaluator
-        self.verbose = verbose
-        self.navigation_count = 0
-        self.pages_tracked: set[int] = set()
-        self.scraped_events: list[dict] = []  # Store all scraped events for debugging
-        self._lock = asyncio.Lock()
-    
-    async def attach_to_page(self, page: Page) -> None:
-        """Attach navigation tracking to a page."""
-        page_id = id(page)
-        
-        if page_id in self.pages_tracked:
-            return
-        
-        self.pages_tracked.add(page_id)
-        
-        async def on_frame_navigated(frame):
-            """Handle frame navigation events."""
-            if frame != page.main_frame:
-                return  # Only track main frame
-            
-            async with self._lock:
-                self.navigation_count += 1
-                url = page.url
-                
-                if self.verbose:
-                    logger.info(f"[NAV #{self.navigation_count}] {url[:80]}...")
-                
-                try:
-                    await self.evaluator.update(page=page)
-                    # Store scraped events for debugging
-                    if self.evaluator._all_infos:
-                        latest = self.evaluator._all_infos[-1]
-                        for info in latest:
-                            event_name = info.get("eventName", "unknown")
-                            if event_name and event_name not in [e.get("eventName") for e in self.scraped_events]:
-                                self.scraped_events.append(info)
-                                logger.info(f"    📋 Found: {event_name}")
-                except Exception as e:
-                    if self.verbose:
-                        logger.warning(f"Evaluator update failed: {e}")
-        
-        page.on("framenavigated", lambda f: asyncio.create_task(on_frame_navigated(f)))
-        
-        if self.verbose:
-            logger.info(f"Tracking attached to page: {page.url[:60]}...")
-    
-    async def handle_new_page(self, new_page: Page) -> None:
-        """Handle new tab/popup windows."""
-        try:
-            await new_page.wait_for_load_state("domcontentloaded", timeout=10000)
-            
-            if self.verbose:
-                logger.info(f"[NEW TAB] {new_page.url[:60]}...")
-            
-            await self.attach_to_page(new_page)
-            await self.evaluator.update(page=new_page)
-            
-        except Exception as e:
-            if self.verbose:
-                logger.warning(f"New tab handling failed: {e}")
-    
-    def attach_to_context(self, context: BrowserContext) -> None:
-        """Attach tracking to all new pages in a browser context."""
-        context.on("page", lambda p: asyncio.create_task(self.handle_new_page(p)))
 
 
 # =============================================================================
@@ -341,7 +266,7 @@ class ResultReporter:
         print("-" * 40 + "\n")
     
     @staticmethod
-    def print_result(result, tracker: NavigationTracker, scenario: TaskScenario) -> None:
+    def print_result(result, evaluator: StubHubInfoGathering, scenario: TaskScenario) -> None:
         """Print verification result with debugging info."""
         print("\n" + "=" * 80)
         print("VERIFICATION RESULT")
@@ -353,7 +278,7 @@ class ResultReporter:
         print(f"Status:           {status}")
         print(f"Score:            {score_pct:.1f}%")
         print(f"Queries Matched:  {result.n_covered}/{result.n_queries}")
-        print(f"Pages Navigated:  {tracker.navigation_count}")
+        print(f"Pages Navigated:  {len(evaluator._navigation_stack)}")
         print("-" * 80)
         
         for i, covered in enumerate(result.is_query_covered):
@@ -374,8 +299,14 @@ class ResultReporter:
         # Show scraped events for debugging
         print("-" * 80)
         print("EVENTS SCRAPED DURING SESSION:")
-        if tracker.scraped_events:
-            for i, event in enumerate(tracker.scraped_events[:10], 1):  # Show first 10
+        all_events = []
+        for page_infos in evaluator._all_infos:
+            for event in page_infos:
+                if event.get("eventName") and event not in all_events:
+                    all_events.append(event)
+        
+        if all_events:
+            for i, event in enumerate(all_events[:10], 1):  # Show first 10
                 name = event.get("eventName", "unknown")
                 city = event.get("city") or "?"
                 venue = event.get("venue") or "?"
@@ -428,7 +359,6 @@ async def run_scenario(scenario: TaskScenario) -> dict:
     )
     
     evaluator = StubHubInfoGathering(queries=scenario.queries)
-    tracker = NavigationTracker(evaluator, verbose=True)
     reporter = ResultReporter()
     
     # Display task info
@@ -442,16 +372,15 @@ async def run_scenario(scenario: TaskScenario) -> dict:
         browser_mgr = BrowserManager()
         browser, context, page = await browser_mgr.launch(p)
         
-        # Attach navigation tracking
-        tracker.attach_to_context(context)
-        await tracker.attach_to_page(page)
+        # Initialize evaluator and attach context tracking
+        await evaluator.reset()
+        evaluator.attach_to_context(context)
         
         # Navigate to start URL
         logger.info(f"Opening {scenario.url}")
         await page.goto(scenario.url, timeout=60000, wait_until="domcontentloaded")
         
-        # Initialize evaluator
-        await evaluator.reset()
+        # Initial page update
         await evaluator.update(page=page)
         
         print("\n🌐 Browser ready - you are now the agent!")
@@ -475,14 +404,14 @@ async def run_scenario(scenario: TaskScenario) -> dict:
         await browser_mgr.close()
     
     # Display results with scenario context
-    reporter.print_result(result, tracker, scenario)
+    reporter.print_result(result, evaluator, scenario)
     
     return {
         "task_id": scenario.task_id,
         "score": result.score,
         "n_covered": result.n_covered,
         "n_queries": result.n_queries,
-        "pages_navigated": tracker.navigation_count,
+        "pages_navigated": len(evaluator._navigation_stack),
     }
 
 
