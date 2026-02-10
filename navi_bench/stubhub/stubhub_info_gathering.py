@@ -255,6 +255,8 @@ class StubHubInfoGathering(BaseMetric):
         self._unavailable_evidences: list[list[list[InfoDict]]] = [
             [[] for _ in alternative_conditions] for alternative_conditions in queries
         ]
+        self._navigation_stack: list[dict] = [] 
+        self._tracked_pages: set = set()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(queries={self.queries})"
@@ -420,7 +422,20 @@ class StubHubInfoGathering(BaseMetric):
         # All matching is deferred to compute() for accurate final-state evaluation
 
     async def compute(self) -> FinalResult:
-        """Compute final coverage score by walking backwards through navigation stack."""
+        """
+            Compute final coverage score by walking backwards through navigation stack.
+            
+            STACK TRAVERSAL LOGIC:
+            The agent might visit many pages: Home -> Search -> Event A -> Event B -> Checkout.
+            To verify success, we need to know the state of the *last valid event* the user viewed.
+            
+            1. We iterate the stack in REVERSE (LIFO).
+            2. We look for the first 'event_listing' page type. This represents the final 
+            event selection the agent arrived at.
+            3. If no 'event_listing' is found (e.g., agent only searched but didn't click),
+            we fall back to 'category_page' data to check if they at least found the
+            right list of events (useful for validating "sold out" detection).
+        """
         
         logger.info(f"Computing with {len(self._navigation_stack)} pages in navigation stack")
         
