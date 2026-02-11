@@ -60,6 +60,29 @@ class ZillowUrlMatch(BaseMetric):
         "isListVisible",
         "mapZoom",
         "customRegionId",
+        "sort",     # Auto-set default sort, not user-intent
+        "mp",       # Auto-computed monthly payment from price
+    }
+    
+    # Mapping of abbreviated property type keys → canonical key.
+    # Zillow uses BOTH forms depending on context:
+    #   Ground truths often use: isHouse, isCondo, isTownhouse, etc.
+    #   Live browser URLs use:   tow:false, mf:false, etc.
+    ABBREV_TO_CANONICAL = {
+        "sf":   "ishouse",
+        "tow":  "istownhouse",
+        "mf":   "ismultifamily",
+        "con":  "iscondo",
+        "land": "islotland",
+        "apa":  "isapartment",
+        "apco": "isapartment",   # Apartment Community alias
+        "manu": "ismanufactured",
+    }
+
+    # All 7 canonical property types
+    ALL_PROPERTY_TYPES = {
+        "ishouse", "istownhouse", "ismultifamily", "iscondo",
+        "islotland", "isapartment", "ismanufactured",
     }
     
     # Valid Zillow domains
@@ -269,35 +292,29 @@ class ZillowUrlMatch(BaseMetric):
         Normalize the filterState dictionary for comparison.
         
         Handles various Zillow filter formats and normalizes them
-        to a consistent structure.
+        to a consistent structure.  Also resolves Zillow's two
+        property-type encodings:
+        
+        1. **Positive (ground truth style)**:
+              ``isHouse: {value: true}``   →   ``ishouse: True``
+        
+        2. **Negative (live browser style)**:
+              ``tow: false, mf: false, land: false, con: false,
+               apa: false, apco: false, manu: false``
+              (all non-House types disabled → infer ``ishouse: True``)
         
         Args:
             filter_state: Raw filterState from searchQueryState.
             
         Returns:
-            Normalized filter dictionary.
+            Normalized filter dictionary with canonical property type keys.
         """
         normalized = {}
         
-        # Track property types set to false (for inference)
-        false_property_types = set()
-        
-        # Property type keys and their positive equivalents
-        PROPERTY_TYPE_MAP = {
-            "tow": "istownhouse",       # Townhomes
-            "mf": "ismultifamily",       # Multi-family
-            "land": "island",            # Lots/Land
-            "con": "iscondo",            # Condos/Co-ops
-            "apa": "isapartment",        # Apartments
-            "apco": "isapartment",       # Apartment Community (alias)
-            "manu": "ismanufactured",    # Manufactured
-        }
-        
-        # Positive property type keys
-        POSITIVE_PROPERTY_TYPES = {
-            "ishouse", "istownhouse", "ismultifamily", "island",
-            "iscondo", "isapartment", "ismanufactured",
-        }
+        # Track which abbreviated property types are explicitly false
+        false_abbrevs: set[str] = set()
+        # Track which canonical property types are explicitly true
+        true_types: set[str] = set()
         
         for key, value in filter_state.items():
             # Skip ignored parameters
@@ -307,21 +324,32 @@ class ZillowUrlMatch(BaseMetric):
             # Normalize the key (lowercase)
             norm_key = key.lower()
             
+            # Check if this is a property type abbreviation
+            is_abbrev = norm_key in self.ABBREV_TO_CANONICAL
+            is_canonical = norm_key in self.ALL_PROPERTY_TYPES
+            
             # Handle different value formats
             if isinstance(value, dict):
                 # Handle {value: X} format (boolean, string, or number)
                 if "value" in value:
                     val = value["value"]
                     if val is True:
-                        normalized[norm_key] = True
+                        # Map abbreviated keys to canonical form
+                        if is_abbrev:
+                            canonical = self.ABBREV_TO_CANONICAL[norm_key]
+                            normalized[canonical] = True
+                            true_types.add(canonical)
+                        else:
+                            normalized[norm_key] = True
+                            if is_canonical:
+                                true_types.add(norm_key)
                     elif val is False or val is None:
                         # Track false property types for inference
-                        if norm_key in PROPERTY_TYPE_MAP:
-                            false_property_types.add(norm_key)
+                        if is_abbrev:
+                            false_abbrevs.add(norm_key)
                         # Skip false/null values (default state)
-                        pass
                     else:
-                        # String or number values like {"value": "only"}, {"value": "7"}
+                        # String or number values
                         normalized[norm_key] = self._normalize_value(val)
                     continue
                 
@@ -351,34 +379,57 @@ class ZillowUrlMatch(BaseMetric):
             
             elif isinstance(value, bool):
                 if value:  # Only track True values
-                    normalized[norm_key] = True
+                    if is_abbrev:
+                        canonical = self.ABBREV_TO_CANONICAL[norm_key]
+                        normalized[canonical] = True
+                        true_types.add(canonical)
+                    else:
+                        normalized[norm_key] = True
+                        if is_canonical:
+                            true_types.add(norm_key)
             
             elif value is not None and value != "":
                 normalized[norm_key] = self._normalize_value(value)
         
         # ---------------------------------------------------------------
-        # Infer positive property type from negative selections.
+        # Infer positive property types from negative-encoding pattern.
         #
-        # Zillow encodes "Houses only" by setting all OTHER types to false:
-        #   tow:false, mf:false, land:false, con:false, apa:false, apco:false, manu:false
+        # Zillow's live browser encodes property type selection by
+        # setting all NON-selected types to false.  Examples:
         #
-        # But ground truths use the positive form: isHouse:true.
-        # We infer the positive type when ALL others are false.
+        #   Houses only:
+        #     tow:false, mf:false, land:false, con:false,
+        #     apa:false, apco:false, manu:false
+        #     → infer ishouse:true
+        #
+        #   Houses + Townhomes:
+        #     mf:false, land:false, con:false,
+        #     apa:false, apco:false, manu:false
+        #     → infer ishouse:true, istownhouse:true
+        #
+        #   Only Condos:
+        #     sf:false, tow:false, mf:false, land:false,
+        #     apa:false, apco:false, manu:false
+        #     → infer iscondo:true
+        #
+        # Logic: convert false abbrevs to the canonical types they
+        # disable, then the selected types = ALL - disabled.
         # ---------------------------------------------------------------
-        if false_property_types and not any(k in normalized for k in POSITIVE_PROPERTY_TYPES):
-            # All base types (excluding apco which is an alias for apa)
-            all_non_house = {"tow", "mf", "land", "con", "apa", "manu"}
-            # Remove apco from false set and treat it as apa
-            effective_false = set()
-            for ft in false_property_types:
-                if ft == "apco":
-                    effective_false.add("apa")
-                else:
-                    effective_false.add(ft)
+        if false_abbrevs and not true_types:
+            # Map false abbreviations to canonical types they disable
+            disabled_types: set[str] = set()
+            for abbrev in false_abbrevs:
+                canonical = self.ABBREV_TO_CANONICAL.get(abbrev)
+                if canonical:
+                    disabled_types.add(canonical)
             
-            if effective_false >= all_non_house:
-                # All non-house types are false → Houses only
-                normalized["ishouse"] = True
+            # The selected types are everything NOT disabled
+            selected_types = self.ALL_PROPERTY_TYPES - disabled_types
+            
+            # Only infer if some types are disabled and some remain
+            if selected_types and len(selected_types) < len(self.ALL_PROPERTY_TYPES):
+                for ptype in selected_types:
+                    normalized[ptype] = True
         
         return normalized
     
@@ -612,14 +663,18 @@ def run_tests():
         {"name": "isLotLand", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"isLotLand":{"value":true}}}', "expected_filters": {"islotland": True}},
         {"name": "isApartment", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"isApartment":{"value":true}}}', "expected_filters": {"isapartment": True}},
         {"name": "isManufactured", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"isManufactured":{"value":true}}}', "expected_filters": {"ismanufactured": True}},
-        # Abbreviated key format
-        {"name": "sf (Houses)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"sf":{"value":true}}}', "expected_filters": {"sf": True}},
-        {"name": "con (Condos)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"con":{"value":true}}}', "expected_filters": {"con": True}},
-        {"name": "tow (Townhomes)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"tow":{"value":true}}}', "expected_filters": {"tow": True}},
-        {"name": "mf (Multi-family)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"mf":{"value":true}}}', "expected_filters": {"mf": True}},
-        {"name": "apa (Apartments)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"apa":{"value":true}}}', "expected_filters": {"apa": True}},
-        {"name": "land (Lots/Land)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"land":{"value":true}}}', "expected_filters": {"land": True}},
-        {"name": "man (Manufactured)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"man":{"value":true}}}', "expected_filters": {"man": True}},
+        # Abbreviated key format (normalized to canonical)
+        {"name": "sf (Houses)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"sf":{"value":true}}}', "expected_filters": {"ishouse": True}},
+        {"name": "con (Condos)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"con":{"value":true}}}', "expected_filters": {"iscondo": True}},
+        {"name": "tow (Townhomes)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"tow":{"value":true}}}', "expected_filters": {"istownhouse": True}},
+        {"name": "mf (Multi-family)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"mf":{"value":true}}}', "expected_filters": {"ismultifamily": True}},
+        {"name": "apa (Apartments)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"apa":{"value":true}}}', "expected_filters": {"isapartment": True}},
+        {"name": "land (Lots/Land)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"land":{"value":true}}}', "expected_filters": {"islotland": True}},
+        {"name": "manu (Manufactured)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"manu":{"value":true}}}', "expected_filters": {"ismanufactured": True}},
+        # Negative encoding (live browser style)
+        {"name": "Houses only (neg enc)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"tow":{"value":false},"mf":{"value":false},"land":{"value":false},"con":{"value":false},"apa":{"value":false},"apco":{"value":false},"manu":{"value":false}}}', "expected_filters": {"ishouse": True}},
+        {"name": "Houses+Townhomes (neg enc)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"mf":{"value":false},"land":{"value":false},"con":{"value":false},"apa":{"value":false},"apco":{"value":false},"manu":{"value":false}}}', "expected_filters": {"ishouse": True, "istownhouse": True}},
+        {"name": "Condos only (neg enc)", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"sf":{"value":false},"tow":{"value":false},"mf":{"value":false},"land":{"value":false},"apa":{"value":false},"apco":{"value":false},"manu":{"value":false}}}', "expected_filters": {"iscondo": True}},
         # Multiple types
         {"name": "House + Townhouse", "url": 'https://www.zillow.com/homes/for_sale/?searchQueryState={"filterState":{"isHouse":{"value":true},"isTownhouse":{"value":true}}}', "expected_filters": {"ishouse": True, "istownhouse": True}},
     ], test_results)

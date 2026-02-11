@@ -148,7 +148,14 @@ Zillow uses **TWO different JSON formats** depending on the filter type:
 
 ## 4. HOME/PROPERTY TYPE
 
-### Example: Houses Only
+Zillow uses **two different encoding systems** for property types depending on context:
+
+> **IMPORTANT**: The verifier normalizes both forms to the same canonical keys (e.g., `ishouse`, `istownhouse`), so ground truth and agent URLs will match regardless of encoding style.
+
+### Encoding 1: Positive (Ground Truth Style)
+
+Explicitly states which types are selected:
+
 ```json
 {
   "filterState": {
@@ -157,16 +164,37 @@ Zillow uses **TWO different JSON formats** depending on the filter type:
 }
 ```
 
-### Example: Houses Only (Abbreviated Key)
+### Encoding 2: Negative (Live Browser Style)
+
+The **real Zillow website** uses negative encoding: it sets all NON-selected types to `false`. For example, selecting **Houses only** in the UI produces:
+
 ```json
 {
   "filterState": {
-    "sf": {"value": true}
+    "tow": {"value": false},
+    "mf":  {"value": false},
+    "land":{"value": false},
+    "con": {"value": false},
+    "apa": {"value": false},
+    "apco":{"value": false},
+    "manu":{"value": false}
   }
 }
 ```
 
-### Example: Multiple Property Types
+**How it works**: All 7 property types exist. When all non-House types are false, only Houses remain selected.
+
+### Negative Encoding Examples
+
+| UI Selection | Keys Set to `false` | Inferred Result |
+|-------------|---------------------|------------------|
+| Houses only | tow, mf, land, con, apa, apco, manu | `ishouse: true` |
+| Houses + Townhomes | mf, land, con, apa, apco, manu | `ishouse: true, istownhouse: true` |
+| Condos only | sf, tow, mf, land, apa, apco, manu | `iscondo: true` |
+| Manufactured only | sf, tow, mf, land, con, apa, apco | `ismanufactured: true` |
+| All types (default) | *(no property filters in URL)* | *(no property type filters)* |
+
+### Example: Multiple Property Types (Positive)
 ```json
 {
   "filterState": {
@@ -179,15 +207,15 @@ Zillow uses **TWO different JSON formats** depending on the filter type:
 
 ### Abbreviated Keys Reference
 
-| Property Type | Full Key | Abbreviated Key |
-|---------------|----------|-----------------|
-| Houses | `isHouse` | `sf` |
-| Townhomes | `isTownhouse` | `tow` |
-| Multi-family | `isMultiFamily` | `mf` |
-| Condos/Co-ops | `isCondo` | `con` |
-| Apartments | `isApartment` | `apa` |
-| Lots/Land | `isLotLand` | `land` |
-| Manufactured | `isManufactured` | `man` |
+| Property Type | Full Key (Canonical) | Abbreviated Key | Notes |
+|---------------|---------------------|-----------------|-------|
+| Houses | `isHouse` | `sf` | Single-family |
+| Townhomes | `isTownhouse` | `tow` | |
+| Multi-family | `isMultiFamily` | `mf` | |
+| Condos/Co-ops | `isCondo` | `con` | |
+| Apartments | `isApartment` | `apa`, `apco` | `apco` = Apartment Community |
+| Lots/Land | `isLotLand` | `land` | |
+| Manufactured | `isManufactured` | `manu` | |
 
 ---
 
@@ -559,6 +587,8 @@ Zillow uses **TWO different JSON formats** depending on the filter type:
 
 ## 18. SORT OPTIONS
 
+> **Note**: The `sort` filter inside `filterState` is **auto-set** by Zillow and is ignored by the verifier. Only `sortSelection` at the top level represents intentional sorting.
+
 ### Example: Sort by Newest
 ```json
 {
@@ -576,6 +606,23 @@ Zillow uses **TWO different JSON formats** depending on the filter type:
 | Bathrooms | `baths` |
 | Square Feet | `size` |
 | Lot Size | `lot` |
+
+---
+
+## 19. AUTO-COMPUTED / IGNORED FILTERS
+
+These are automatically added by Zillow and **ignored by the verifier** during comparison:
+
+| Filter | JSON Key | Reason |
+|--------|----------|--------|
+| Sort (in filterState) | `sort` | Auto-set default, not user intent |
+| Monthly Payment | `mp` | Auto-computed from price |
+| Pagination | `pagination` | Page number |
+| Map Bounds | `mapBounds` | Viewport coordinates |
+| Map Visible | `isMapVisible` | UI toggle |
+| List Visible | `isListVisible` | UI toggle |
+| Map Zoom | `mapZoom` | Zoom level |
+| Custom Region ID | `customRegionId` | Internal region mapping |
 
 ---
 
@@ -612,7 +659,7 @@ https://www.zillow.com/homes/for_sale/Los-Angeles,-CA_rb/?searchQueryState=%7B%2
 | Search Mode & Location | 5 |
 | Price | 4 |
 | Beds & Baths | 3 |
-| Home/Property Type | 9 |
+| Home/Property Type | 9 (+ negative encoding for all combos) |
 | Listing Type & Status | 9 |
 | Size & Dimensions | 4 |
 | Year Built | 2 |
@@ -627,7 +674,8 @@ https://www.zillow.com/homes/for_sale/Los-Angeles,-CA_rb/?searchQueryState=%7B%2
 | Rental-Specific | 25 |
 | Sold Properties | 3 |
 | Sort Options | 9 |
-| **TOTAL** | **100** |
+| Auto-Computed/Ignored | 8 |
+| **TOTAL** | **108** |
 
 ---
 
@@ -639,3 +687,10 @@ https://www.zillow.com/homes/for_sale/Los-Angeles,-CA_rb/?searchQueryState=%7B%2
 | Range (min/max) | `{"key": {"min": X, "max": Y}}` | `{"price": {"min": 300000}}` |
 | String value | `{"key": {"value": "string"}}` | `{"doz": {"value": "30"}}` |
 | Direct string | `{"key": "string"}` | `{"keywords": "pool"}` |
+| Negative boolean | `{"key": {"value": false}}` | `{"tow": {"value": false}}` |
+
+---
+
+**Last Updated:** 2026-02-11
+**Version:** 2.0.0 (added negative encoding, auto-computed filters)
+**Test Suite:** 111/111 tests passing

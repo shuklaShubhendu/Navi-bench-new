@@ -135,19 +135,19 @@ Zillow uses several filter value formats:
 ```python
 # Format 1: Boolean with value wrapper
 {"isHouse": {"value": true}}
-→ {"ishouse": True}
+-> {"ishouse": True}
 
 # Format 2: Range filter
 {"price": {"min": 500000, "max": 1000000}}
-→ {"price_min": 500000, "price_max": 1000000}
+-> {"price_min": 500000, "price_max": 1000000}
 
 # Format 3: Exact value
 {"beds": {"exact": 3}}
-→ {"beds_exact": 3}
+-> {"beds_exact": 3}
 
 # Format 4: Simple boolean
 {"hasPool": true}
-→ {"haspool": True}
+-> {"haspool": True}
 ```
 
 ### 4.2 Key Normalization
@@ -155,20 +155,48 @@ Zillow uses several filter value formats:
 All keys are normalized to lowercase:
 
 ```python
-"isHouse" → "ishouse"
-"hasMountainView" → "hasmountainview"
-"filterState" → "filterstate"
+"isHouse" -> "ishouse"
+"hasMountainView" -> "hasmountainview"
+"filterState" -> "filterstate"
 ```
 
-### 4.3 Ignored Parameters
+### 4.3 Property Type Normalization
 
-These UI-state parameters are ignored during comparison:
+Property types have special handling due to Zillow's dual encoding:
+
+**Abbreviated key mapping** (abbreviated -> canonical):
+```python
+"sf"   -> "ishouse"         # Single-family
+"tow"  -> "istownhouse"     # Townhomes
+"mf"   -> "ismultifamily"   # Multi-family
+"con"  -> "iscondo"         # Condos/Co-ops
+"land" -> "islotland"       # Lots/Land
+"apa"  -> "isapartment"     # Apartments
+"apco" -> "isapartment"     # Apartment Community (alias)
+"manu" -> "ismanufactured"  # Manufactured
+```
+
+**Negative encoding inference**: When the live Zillow browser sets types to false, the verifier infers the selected types:
+```python
+# Browser URL: tow:false, mf:false, land:false, con:false, apa:false, apco:false, manu:false
+# All non-house types disabled -> infer: ishouse: True
+
+# Browser URL: mf:false, land:false, con:false, apa:false, apco:false, manu:false
+# All except house and townhouse disabled -> infer: ishouse: True, istownhouse: True
+```
+
+### 4.4 Ignored Parameters
+
+These UI-state and auto-computed parameters are ignored during comparison:
 
 - `pagination` - Page number
 - `mapBounds` - Map viewport coordinates
 - `isMapVisible` - Map toggle state
 - `isListVisible` - List toggle state
 - `mapZoom` - Zoom level
+- `customRegionId` - Internal region mapping
+- `sort` - Auto-set default sort (inside filterState)
+- `mp` - Auto-computed monthly payment from price
 
 ---
 
@@ -298,5 +326,5 @@ IGNORED_PARAMS = {
 
 ---
 
-**Last Updated:** 2026-02-09  
-**Version:** 1.0.0
+**Last Updated:** 2026-02-11
+**Version:** 2.0.0 (added property type normalization, negative encoding, auto-computed filters)
