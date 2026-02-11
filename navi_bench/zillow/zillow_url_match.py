@@ -62,6 +62,15 @@ class ZillowUrlMatch(BaseMetric):
         "customRegionId",
     }
     
+    # Valid Zillow domains
+    VALID_DOMAINS = {"zillow.com", "www.zillow.com"}
+    
+    # URL path patterns that indicate non-search / error pages
+    INVALID_PATH_PATTERNS = {
+        "/error", "/captcha", "/404", "/login", "/register",
+        "/user/", "/myzillow", "/profile",
+    }
+    
     # Search type patterns in URL path
     SEARCH_TYPES = {
         "for_sale": ["/homes/for_sale/", "for_sale", "_rb/"],
@@ -98,6 +107,27 @@ class ZillowUrlMatch(BaseMetric):
         """Reset the verifier state."""
         self._agent_url = None
 
+    @staticmethod
+    def _is_valid_zillow_url(url: str) -> bool:
+        """Check if a URL is a valid Zillow search page.
+        
+        Rejects:
+        - Non-Zillow domains (e.g. fake-zillow.com)
+        - Error/non-search pages (e.g. /error404, /captcha, /login)
+        """
+        if not url:
+            return False
+        parsed = urlparse(url.strip())
+        domain = parsed.hostname or ""
+        # Must be from zillow.com
+        if domain not in ZillowUrlMatch.VALID_DOMAINS:
+            return False
+        # Reject known non-search paths
+        path_lower = parsed.path.lower()
+        if any(p in path_lower for p in ZillowUrlMatch.INVALID_PATH_PATTERNS):
+            return False
+        return True
+
     @beartype
     async def update(self, *, url: Optional[str] = None, **kwargs) -> None:
         """
@@ -107,6 +137,9 @@ class ZillowUrlMatch(BaseMetric):
             url: The current URL from the agent's browser.
         """
         if url:
+            if not self._is_valid_zillow_url(url):
+                logger.debug(f"Ignoring non-Zillow URL: {url}")
+                return
             self._agent_url = url
             logger.debug(f"Updated agent URL: {url}")
     
@@ -169,6 +202,13 @@ class ZillowUrlMatch(BaseMetric):
         
         # Parse URL
         parsed = urlparse(url)
+        
+        # Validate domain
+        domain = parsed.hostname or ""
+        if domain and domain not in self.VALID_DOMAINS:
+            logger.warning(f"Invalid Zillow domain: {domain}")
+            return result
+        
         path = parsed.path.lower()
         
         # Detect search type from path
@@ -239,6 +279,26 @@ class ZillowUrlMatch(BaseMetric):
         """
         normalized = {}
         
+        # Track property types set to false (for inference)
+        false_property_types = set()
+        
+        # Property type keys and their positive equivalents
+        PROPERTY_TYPE_MAP = {
+            "tow": "istownhouse",       # Townhomes
+            "mf": "ismultifamily",       # Multi-family
+            "land": "island",            # Lots/Land
+            "con": "iscondo",            # Condos/Co-ops
+            "apa": "isapartment",        # Apartments
+            "apco": "isapartment",       # Apartment Community (alias)
+            "manu": "ismanufactured",    # Manufactured
+        }
+        
+        # Positive property type keys
+        POSITIVE_PROPERTY_TYPES = {
+            "ishouse", "istownhouse", "ismultifamily", "island",
+            "iscondo", "isapartment", "ismanufactured",
+        }
+        
         for key, value in filter_state.items():
             # Skip ignored parameters
             if key in self.IGNORED_PARAMS:
@@ -255,6 +315,9 @@ class ZillowUrlMatch(BaseMetric):
                     if val is True:
                         normalized[norm_key] = True
                     elif val is False or val is None:
+                        # Track false property types for inference
+                        if norm_key in PROPERTY_TYPE_MAP:
+                            false_property_types.add(norm_key)
                         # Skip false/null values (default state)
                         pass
                     else:
@@ -292,6 +355,30 @@ class ZillowUrlMatch(BaseMetric):
             
             elif value is not None and value != "":
                 normalized[norm_key] = self._normalize_value(value)
+        
+        # ---------------------------------------------------------------
+        # Infer positive property type from negative selections.
+        #
+        # Zillow encodes "Houses only" by setting all OTHER types to false:
+        #   tow:false, mf:false, land:false, con:false, apa:false, apco:false, manu:false
+        #
+        # But ground truths use the positive form: isHouse:true.
+        # We infer the positive type when ALL others are false.
+        # ---------------------------------------------------------------
+        if false_property_types and not any(k in normalized for k in POSITIVE_PROPERTY_TYPES):
+            # All base types (excluding apco which is an alias for apa)
+            all_non_house = {"tow", "mf", "land", "con", "apa", "manu"}
+            # Remove apco from false set and treat it as apa
+            effective_false = set()
+            for ft in false_property_types:
+                if ft == "apco":
+                    effective_false.add("apa")
+                else:
+                    effective_false.add(ft)
+            
+            if effective_false >= all_non_house:
+                # All non-house types are false → Houses only
+                normalized["ishouse"] = True
         
         return normalized
     
