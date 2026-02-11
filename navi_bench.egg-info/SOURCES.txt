@@ -21,5 +21,6 @@ navi_bench/stubhub/auto_demo_stubhub.py
 navi_bench/stubhub/batch_demo_stubhub.py
 navi_bench/stubhub/demo_stubhub.py
 navi_bench/stubhub/stubhub_info_gathering.py
+navi_bench/stubhub/stubhub_info_gathering_tests.py
 navi_bench/stubhub/test_stubhub.py
 navi_bench/stubhub/test_stubhub_unit.py
