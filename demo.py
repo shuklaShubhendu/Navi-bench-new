@@ -44,8 +44,8 @@ ZILLOW_LOCAL_TASK = {
             "timezone": "America/Los_Angeles",
             "ground_truth_url": (
                 "https://www.zillow.com/homes/for_sale/Los-Angeles,-CA_rb/"
-                '?searchQueryState={"filterState":{"beds":{"min":3},'
-                '"price":{"max":800000},"isHouse":{"value":true}}}'
+                "?searchQueryState=%7B%22filterState%22%3A%7B%22beds%22%3A%7B%22min%22%3A3%7D%2C"
+                "%22price%22%3A%7B%22max%22%3A800000%7D%2C%22isHouse%22%3A%7B%22value%22%3Atrue%7D%7D%7D"
             ),
         }
     ),

@@ -61,7 +61,10 @@ class ZillowUrlMatch(BaseMetric):
         "mapZoom",
         "customRegionId",
         "sort",     # Auto-set default sort, not user-intent
-        "mp",       # Auto-computed monthly payment from price
+        # Rental listing context flags (auto-set by Zillow for rent mode)
+        "fr",       # for-rent flag
+        "fsba",     # for-sale-by-agent (disabled in rent mode)
+        "fsbo",     # for-sale-by-owner (disabled in rent mode)
     }
     
     # Mapping of abbreviated property type keys → canonical key.
