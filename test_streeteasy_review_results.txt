@@ -1,0 +1,75 @@
+2026-02-16 12:15:56.634 | INFO     | navi_bench.streeteasy.streeteasy_url_match:update:336 - No match found: https://streeteasy.com/for-sale/manhattan/beds:3...
+2026-02-16 12:15:56.634 | INFO     | navi_bench.streeteasy.streeteasy_url_match:compute:342 - Final score: 0.0
+2026-02-16 12:15:56.635 | INFO     | navi_bench.streeteasy.streeteasy_url_match:update:333 - Match found: https://streeteasy.com/for-sale/manhattan/beds:2...
+2026-02-16 12:15:56.635 | INFO     | navi_bench.streeteasy.streeteasy_url_match:compute:342 - Final score: 1.0
+2026-02-16 12:15:56.635 | INFO     | navi_bench.streeteasy.streeteasy_url_match:compute:342 - Final score: 0.0
+======================================================================
+STREETEASY CODE REVIEW ΓÇö ISSUE VERIFICATION
+======================================================================
+
+--- ISSUE #1: Range Filter Parsing (beds>=2 ΓåÆ beds:2-) ---
+    [PASS] Issue #1: beds>=2 self-match
+    [PASS] Issue #1: beds>=2 vs beds:2 (should they match?)
+    [PASS] Issue #1: beds>=2 parsed value
+    [PASS] Issue #1: beds:2 parsed value
+    [PASS] Issue #1: beds:2- vs beds>=2 (same semantics)
+
+--- ISSUE #2: Multi-Value Filter Merging (subway:L|subway:1) ---
+    [PASS] Issue #2: subway:L|subway:1 merged
+    [PASS] Issue #2: amenities:doorman|amenities:elevator merged
+    [PASS] Issue #2: 3 subway lines order independent
+
+--- ISSUE #3: Amenities Prefix (multiple amenities handling) ---
+    [PASS] Issue #3: doorman + elevator combo match
+    [PASS] Issue #3: doorman + elevator reversed order
+    [PASS] Issue #3: Missing elevator should fail
+
+--- ISSUE #4: Boolean Value Comparison ---
+    [PASS] Issue #4: Identical non-bool 'sold' matches
+    [PASS] Issue #4: no_fee:1 vs no_fee:true (boolean equiv)
+    [PASS] Issue #4: no_fee:1 vs no_fee:yes (boolean equiv)
+    [PASS] Issue #4: status:sold vs status:open (diff values)
+
+--- ISSUE #5: Neighborhood Comparison Asymmetry ---
+    [PASS] Issue #5: GT has neighborhood, agent doesn't ΓåÆ FAIL
+    [PASS] Issue #5: Agent has extra neighborhood, GT doesn't ΓåÆ OK (more specific)
+
+--- ISSUE #6: Extra Filters Don't Fail ---
+    [PASS] Issue #6: Agent has extra beds filter ΓåÆ OK (superset)
+    [PASS] Issue #6: Agent missing GT filter ΓåÆ FAIL
+
+--- ISSUE #7: Price Abbreviation Edge Cases ---
+    [PASS] Issue #7: 1.5m matches 1500000
+    [PASS] Issue #7: 1.5k matches 1500
+    [PASS] Issue #7: Invalid price 'abc' doesn't crash
+
+--- ISSUE #9: Pipe-Delimited Same-Key Subway Filters ---
+    [PASS] Issue #9: subway:1|subway:2|subway:3 ΓåÆ merged value
+    [PASS] Issue #9: Subway order independence
+
+--- ISSUE #10: Query Parameter Handling ---
+    [PASS] Issue #10: sort_by=se_score ignored
+    [PASS] Issue #10: page=2 ignored
+    [PASS] Issue #10: Different sort values still match
+
+--- ISSUE #11: Error Handling ---
+  [PASS] Issue #11: Malformed URL doesn't crash (match=True)
+
+--- ISSUE #12: State Management ---
+  [PASS] Issue #12: Multiple updates work (first=0, second=1)
+  [PASS] Issue #12: Reset clears state (score=0 after reset)
+
+--- ISSUE #13: Type Normalization ---
+    [PASS] Issue #13: Unknown type code Z9 passes through
+    [PASS] Issue #13: D1 ΓåÆ D1 (condo)
+    [PASS] Issue #13: condo ΓåÆ D1
+
+--- EXTRA: Critical Cross-Format Tests ---
+    [PASS] Issue #X: beds:2- (explicit range) vs beds>=2 (parsed to 2-)
+    [PASS] Issue #X: 3 amenities order-independent
+    [PASS] Issue #X: Missing 1 of 3 amenities ΓåÆ FAIL
+
+======================================================================
+RESULTS: 36/36 tests passed (100.0%)
+ALL TESTS PASSED ΓÇö No real bugs found
+======================================================================

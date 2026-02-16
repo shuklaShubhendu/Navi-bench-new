@@ -183,6 +183,10 @@ FILTER_NAME_ALIASES = {
     "days_on_market": "days_on_market",
     "days-on-market": "days_on_market",
     "subway": "subway",
+    "transit_lines": "subway",
+    "transit": "subway",
+    "transit-lines": "subway",
+    "transit_line": "subway",
     "school": "school",
     "zip": "zip",
     "keywords": "keywords",
@@ -374,20 +378,39 @@ class StreetEasyUrlMatch(BaseMetric):
                 )
                 return False, details
 
-            # Compare location (borough)
-            if agent_parts["location"] != gt_parts["location"]:
+            # Compare location and neighborhood
+            # StreetEasy supports two URL formats for neighborhoods:
+            #   1. /for-sale/manhattan/upper-west-side/filters (borough + neighborhood)
+            #   2. /for-sale/upper-west-side/filters (neighborhood as location)
+            # Both formats should match each other (browser-verified Feb 2026:
+            # format 1 actually 404s on the real site, but we accept both in the
+            # verifier for backward compatibility with existing GT data).
+            agent_loc = agent_parts["location"]
+            agent_nbhd = agent_parts["neighborhood"]
+            gt_loc = gt_parts["location"]
+            gt_nbhd = gt_parts["neighborhood"]
+
+            # Normalize: if one URL has borough+neighborhood and the other has
+            # neighborhood-as-location, extract the effective neighborhood
+            agent_effective_nbhd = agent_nbhd or agent_loc
+            gt_effective_nbhd = gt_nbhd or gt_loc
+
+            # Case 1: Both have same structure (both borough+nbhd or both nbhd-only)
+            if agent_loc == gt_loc and agent_nbhd == gt_nbhd:
+                pass  # Exact match
+            # Case 2: One has borough+neighborhood, other has neighborhood-as-location
+            elif agent_nbhd and not gt_nbhd and agent_nbhd == gt_loc:
+                pass  # e.g., agent: manhattan/upper-west-side, gt: upper-west-side
+            elif gt_nbhd and not agent_nbhd and gt_nbhd == agent_loc:
+                pass  # e.g., gt: manhattan/upper-west-side, agent: upper-west-side
+            # Case 3: Both have neighborhoods but via different structures
+            elif agent_effective_nbhd == gt_effective_nbhd:
+                pass  # Same effective neighborhood
+            else:
                 details["mismatches"].append(
-                    f"Location: '{agent_parts['location']}' vs '{gt_parts['location']}'"
+                    f"Location: '{agent_loc}/{agent_nbhd}' vs '{gt_loc}/{gt_nbhd}'"
                 )
                 return False, details
-
-            # Compare neighborhood (if present)
-            if agent_parts["neighborhood"] != gt_parts["neighborhood"]:
-                if gt_parts["neighborhood"]:
-                    details["mismatches"].append(
-                        f"Neighborhood: '{agent_parts['neighborhood']}' vs '{gt_parts['neighborhood']}'"
-                    )
-                    return False, details
 
             # Compare filters (order-independent)
             agent_filters = agent_parts["filters"]
@@ -551,11 +574,16 @@ class StreetEasyUrlMatch(BaseMetric):
         value = value.strip().lower()
 
         # Handle "amenities:" prefix — this is the real StreetEasy format
+        # Supports both single (amenities:doorman) and comma-separated
+        # (amenities:elevator,doorman) values — the latter is what
+        # StreetEasy's UI actually generates (browser-verified Feb 2026)
         if key == "amenities":
-            canonical_amenity = AMENITY_ALIASES.get(
-                value.replace("-", "_"), value
-            )
-            return "amenities", canonical_amenity
+            amenities = [a.strip() for a in value.split(",")]
+            normalized = []
+            for a in amenities:
+                canonical = AMENITY_ALIASES.get(a.replace("-", "_"), a)
+                normalized.append(canonical)
+            return "amenities", ",".join(sorted(normalized))
 
         # Normalize key using aliases
         key_underscore = key.replace("-", "_")

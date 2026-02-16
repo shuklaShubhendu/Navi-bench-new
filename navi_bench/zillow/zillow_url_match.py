@@ -61,10 +61,7 @@ class ZillowUrlMatch(BaseMetric):
         "mapZoom",
         "customRegionId",
         "sort",     # Auto-set default sort, not user-intent
-        # Rental listing context flags (auto-set by Zillow for rent mode)
-        "fr",       # for-rent flag
-        "fsba",     # for-sale-by-agent (disabled in rent mode)
-        "fsbo",     # for-sale-by-owner (disabled in rent mode)
+        "fr",       # for-rent flag (context only)
     }
     
     # Mapping of abbreviated property type keys → canonical key.
@@ -87,6 +84,12 @@ class ZillowUrlMatch(BaseMetric):
         "ishouse", "istownhouse", "ismultifamily", "iscondo",
         "islotland", "isapartment", "ismanufactured",
     }
+    
+    # Primary listing status types (for-sale context).
+    # Zillow uses negative encoding: selecting e.g. "New Construction"
+    # disables all OTHER primary statuses (fsba:F, fsbo:F, fore:F, auc:F).
+    # The 5 primary types that participate in negative encoding:
+    ALL_LISTING_TYPES = {"fsba", "fsbo", "nc", "fore", "auc"}
     
     # Valid Zillow domains
     VALID_DOMAINS = {"zillow.com", "www.zillow.com"}
@@ -319,6 +322,10 @@ class ZillowUrlMatch(BaseMetric):
         # Track which canonical property types are explicitly true
         true_types: set[str] = set()
         
+        # Track listing status types for negative encoding inference
+        false_listing_types: set[str] = set()
+        true_listing_types: set[str] = set()
+        
         for key, value in filter_state.items():
             # Skip ignored parameters
             if key in self.IGNORED_PARAMS:
@@ -330,6 +337,8 @@ class ZillowUrlMatch(BaseMetric):
             # Check if this is a property type abbreviation
             is_abbrev = norm_key in self.ABBREV_TO_CANONICAL
             is_canonical = norm_key in self.ALL_PROPERTY_TYPES
+            # Check if this is a listing status type
+            is_listing_type = norm_key in self.ALL_LISTING_TYPES
             
             # Handle different value formats
             if isinstance(value, dict):
@@ -346,10 +355,15 @@ class ZillowUrlMatch(BaseMetric):
                             normalized[norm_key] = True
                             if is_canonical:
                                 true_types.add(norm_key)
+                            if is_listing_type:
+                                true_listing_types.add(norm_key)
                     elif val is False or val is None:
                         # Track false property types for inference
                         if is_abbrev:
                             false_abbrevs.add(norm_key)
+                        # Track false listing types for inference
+                        if is_listing_type:
+                            false_listing_types.add(norm_key)
                         # Skip false/null values (default state)
                     else:
                         # String or number values
@@ -358,9 +372,9 @@ class ZillowUrlMatch(BaseMetric):
                 
                 # Handle range filters {min: X, max: Y}
                 if "min" in value or "max" in value:
-                    if "min" in value:
+                    if "min" in value and value["min"] is not None:
                         normalized[f"{norm_key}_min"] = self._normalize_value(value["min"])
-                    if "max" in value:
+                    if "max" in value and value["max"] is not None:
                         normalized[f"{norm_key}_max"] = self._normalize_value(value["max"])
                     continue
                 
@@ -405,11 +419,6 @@ class ZillowUrlMatch(BaseMetric):
         #     apa:false, apco:false, manu:false
         #     → infer ishouse:true
         #
-        #   Houses + Townhomes:
-        #     mf:false, land:false, con:false,
-        #     apa:false, apco:false, manu:false
-        #     → infer ishouse:true, istownhouse:true
-        #
         #   Only Condos:
         #     sf:false, tow:false, mf:false, land:false,
         #     apa:false, apco:false, manu:false
@@ -419,20 +428,43 @@ class ZillowUrlMatch(BaseMetric):
         # disable, then the selected types = ALL - disabled.
         # ---------------------------------------------------------------
         if false_abbrevs and not true_types:
-            # Map false abbreviations to canonical types they disable
             disabled_types: set[str] = set()
             for abbrev in false_abbrevs:
                 canonical = self.ABBREV_TO_CANONICAL.get(abbrev)
                 if canonical:
                     disabled_types.add(canonical)
             
-            # The selected types are everything NOT disabled
             selected_types = self.ALL_PROPERTY_TYPES - disabled_types
-            
-            # Only infer if some types are disabled and some remain
             if selected_types and len(selected_types) < len(self.ALL_PROPERTY_TYPES):
                 for ptype in selected_types:
                     normalized[ptype] = True
+        
+        # ---------------------------------------------------------------
+        # Infer listing status types from negative-encoding pattern.
+        #
+        # Same principle as property types.  Zillow's browser encodes
+        # listing status selection by disabling all NON-selected types:
+        #
+        #   New Construction only:
+        #     fsba:false, fsbo:false, fore:false, auc:false
+        #     → infer nc:true
+        #
+        #   Foreclosure only:
+        #     fsba:false, fsbo:false, nc:false, auc:false
+        #     → infer fore:true
+        #
+        #   FSBO only:
+        #     fsba:false, nc:false, fore:false, auc:false
+        #     → infer fsbo:true
+        #
+        # If ALL 5 primary types are false (rental context), the
+        # inferred set is empty → no listing types added. ✅
+        # ---------------------------------------------------------------
+        if false_listing_types and not true_listing_types:
+            selected_listings = self.ALL_LISTING_TYPES - false_listing_types
+            if selected_listings and len(selected_listings) < len(self.ALL_LISTING_TYPES):
+                for lt in selected_listings:
+                    normalized[lt] = True
         
         return normalized
     
