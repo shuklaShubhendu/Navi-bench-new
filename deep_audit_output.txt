@@ -1,0 +1,29 @@
+======================================================================
+DEEP AUDIT STRESS TESTS
+======================================================================
+
+--- beds>=N normalization ---
+
+--- no_fee as filter vs amenity ---
+
+--- transit_lines / subway cross-matching ---
+
+--- comma amenities edge cases ---
+
+--- neighborhood cross-format ---
+
+--- URL encoding ---
+
+--- price edge cases ---
+
+--- multi-value type codes ---
+
+--- extra filters tolerance ---
+
+--- boolean matching ---
+
+--- complex real-world scenarios ---
+
+======================================================================
+ALL 40 DEEP AUDIT TESTS PASSED
+======================================================================

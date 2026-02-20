@@ -1,0 +1,188 @@
+Read 70 tasks
+
+Task 5: REORDERED
+  Old: beds:3|price:1000000-2000000
+  New: price:1000000-2000000|beds:3
+
+Task 11: REORDERED
+  Old: type:D1|amenities:gym,pool|beds>=2|price:1000000-3000000
+  New: type:D1|price:1000000-3000000|beds>=2|amenities:gym,pool
+
+Task 12: REORDERED
+  Old: type:D1|amenities:garage|beds>=2
+  New: type:D1|beds>=2|amenities:garage
+
+Task 13: REORDERED
+  Old: type:P1|amenities:doorman|price:-800000|beds>=2
+  New: type:P1|price:-800000|beds>=2|amenities:doorman
+
+Task 14: REORDERED
+  Old: type:D1|amenities:pool|price:-2000000
+  New: type:D1|price:-2000000|amenities:pool
+
+Task 15: REORDERED
+  Old: sqft>=1000|beds>=2
+  New: beds>=2|sqft>=1000
+
+Task 16: REORDERED
+  Old: type:D1|amenities:elevator|price:500000-1500000|beds>=1
+  New: type:D1|price:500000-1500000|beds>=1|amenities:elevator
+
+Task 17: REORDERED
+  Old: type:D1,P1|beds>=2|price:-1500000|pets:allowed|amenities:doorman,gym
+  New: type:D1,P1|price:-1500000|beds>=2|amenities:doorman,gym|pets:allowed
+
+Task 19: REORDERED
+  Old: type:D1|prewar:1|beds>=2|price:1000000-3000000|amenities:doorman
+  New: type:D1|price:1000000-3000000|beds>=2|amenities:doorman|prewar:1
+
+Task 20: REORDERED
+  Old: type:P1|prewar:1|amenities:doorman|beds>=2|price:-1000000
+  New: type:P1|price:-1000000|beds>=2|amenities:doorman|prewar:1
+
+Task 27: REORDERED
+  Old: type:D1|beds>=1|price:-800000
+  New: type:D1|price:-800000|beds>=1
+
+Task 29: REORDERED
+  Old: type:D1|beds>=2|price:-1500000
+  New: type:D1|price:-1500000|beds>=2
+
+Task 30: REORDERED
+  Old: type:P1|beds>=1|price:-600000|prewar:1
+  New: type:P1|price:-600000|beds>=1|prewar:1
+
+Task 31: REORDERED
+  Old: type:D1|prewar:1|beds>=3|price:2000000-5000000
+  New: type:D1|price:2000000-5000000|beds>=3|prewar:1
+
+Task 32: REORDERED
+  Old: type:P1|prewar:1|amenities:doorman,elevator|price:-1500000
+  New: type:P1|price:-1500000|amenities:doorman,elevator|prewar:1
+
+Task 33: REORDERED
+  Old: no_fee:1|beds>=1|price:-3500
+  New: price:-3500|beds>=1|no_fee:1
+
+Task 36: REORDERED
+  Old: no_fee:1|beds>=2|price:-4000
+  New: price:-4000|beds>=2|no_fee:1
+
+Task 37: REORDERED
+  Old: furnished:1|beds:1|price:-4000
+  New: price:-4000|beds:1|furnished:1
+
+Task 38: REORDERED
+  Old: beds:0|price:-2500
+  New: price:-2500|beds:0
+
+Task 40: REORDERED
+  Old: price:2000-4000|pets:allowed|amenities:doorman,in_unit_laundry
+  New: price:2000-4000|amenities:doorman,in_unit_laundry|pets:allowed
+
+Task 41: REORDERED
+  Old: amenities:doorman,elevator|price:-5000|beds>=1
+  New: price:-5000|beds>=1|amenities:doorman,elevator
+
+Task 42: REORDERED
+  Old: pets:allowed|amenities:doorman|beds>=1|price:-5000
+  New: price:-5000|beds>=1|amenities:doorman|pets:allowed
+
+Task 43: REORDERED
+  Old: no_fee:1|amenities:gym|beds>=1|price:-2500
+  New: price:-2500|beds>=1|no_fee:1|amenities:gym
+
+Task 44: REORDERED
+  Old: amenities:pool|price:-6000|beds>=1
+  New: price:-6000|beds>=1|amenities:pool
+
+Task 45: REORDERED
+  Old: amenities:doorman,in_unit_laundry|pets:allowed|price:2000-3500
+  New: price:2000-3500|amenities:doorman,in_unit_laundry|pets:allowed
+
+Task 46: REORDERED
+  Old: amenities:doorman,gym|beds>=2|price:3000-6000
+  New: price:3000-6000|beds>=2|amenities:doorman,gym
+
+Task 47: REORDERED
+  Old: no_fee:1|amenities:elevator|beds>=1|price:-3500
+  New: price:-3500|beds>=1|no_fee:1|amenities:elevator
+
+Task 48: REORDERED
+  Old: beds>=2|price:-4000|no_fee:1|transit_lines:L|amenities:gym
+  New: price:-4000|beds>=2|no_fee:1|transit_lines:L|amenities:gym
+
+Task 49: REORDERED
+  Old: transit_lines:1|beds>=1|price:-3000
+  New: price:-3000|beds>=1|transit_lines:1
+
+Task 50: REORDERED
+  Old: transit_lines:A|price:-3000
+  New: price:-3000|transit_lines:A
+
+Task 51: REORDERED
+  Old: transit_lines:7|no_fee:1|price:-3500
+  New: price:-3500|no_fee:1|transit_lines:7
+
+Task 52: REORDERED
+  Old: transit_lines:G|no_fee:1|beds>=1|price:-2500
+  New: price:-2500|beds>=1|no_fee:1|transit_lines:G
+
+Task 53: REORDERED
+  Old: transit_lines:ACE|beds>=1|price:-3000
+  New: price:-3000|beds>=1|transit_lines:ACE
+
+Task 54: REORDERED
+  Old: transit_lines:L|pets:allowed|amenities:in_unit_laundry|beds>=1|price:-3500
+  New: price:-3500|beds>=1|transit_lines:L|amenities:in_unit_laundry|pets:allowed
+
+Task 55: REORDERED
+  Old: beds>=2|price:-4000
+  New: price:-4000|beds>=2
+
+Task 57: REORDERED
+  Old: beds>=2|price:-4000|pets:allowed
+  New: price:-4000|beds>=2|pets:allowed
+
+Task 61: REORDERED
+  Old: status:sold|type:D1|price:2000000-5000000|beds>=3
+  New: type:D1|price:2000000-5000000|beds>=3|status:sold
+
+Task 64: REORDERED
+  Old: beds>=4|price:5000000-|status:sold
+  New: price:5000000-|beds>=4|status:sold
+
+Task 65: REORDERED
+  Old: type:D1|beds>=2|amenities:doorman|price:1000000-2000000|status:sold
+  New: type:D1|price:1000000-2000000|beds>=2|status:sold|amenities:doorman
+
+Task 66: REORDERED
+  Old: no_fee:1|pets:allowed|amenities:doorman|beds>=2|price:-5000
+  New: price:-5000|beds>=2|no_fee:1|amenities:doorman|pets:allowed
+
+Task 67: REORDERED
+  Old: furnished:1|amenities:doorman,elevator|beds>=1|price:-5000
+  New: price:-5000|beds>=1|furnished:1|amenities:doorman,elevator
+
+Task 68: REORDERED
+  Old: no_fee:1|transit_lines:L|amenities:doorman,gym|beds>=1|price:-3000
+  New: price:-3000|beds>=1|no_fee:1|transit_lines:L|amenities:doorman,gym
+
+Task 69: REORDERED
+  Old: no_fee:1|pets:allowed|beds>=2|price:-4500
+  New: price:-4500|beds>=2|no_fee:1|pets:allowed
+
+
+=== SUMMARY ===
+Filter order changed: 43
+Sort_by added only:   27
+Unchanged:            0
+Total:                70
+
+Written to: navi_bench\streeteasy\streeteasy_benchmark_tasks.xlsx - streeteasy_benchmark_tasks.csv
+
+=== VERIFY USER'S EXAMPLE (Task 5) ===
+Task:     Search for 3-bedroom homes for sale in Brooklyn priced between $1,000,000 and $2,000,000.
+URL:      https://streeteasy.com/for-sale/brooklyn/price:1000000-2000000%7Cbeds:3?sort_by=se_score
+Expected: https://streeteasy.com/for-sale/brooklyn/price:1000000-2000000%7Cbeds:3?sort_by=se_score
+Match:    True

@@ -1,0 +1,48 @@
+Parsed 70 tasks from CSV
+
+======================================================================
+TEST 1: Self-Match (every GT URL matches itself)
+======================================================================
+
+  Self-match: 70/70 passed
+
+======================================================================
+TEST 2: URL-encoded vs raw equivalence
+======================================================================
+
+  Encoded equivalence: 70/70 passed
+
+======================================================================
+TEST 3: Cross-format matching (key patterns)
+======================================================================
+  ✅ transit_lines:L vs subway:L
+  ✅ comma amenities: doorman,gym vs gym,doorman
+  ✅ neighborhood: upper-west-side vs manhattan/upper-west-side
+  ✅ filter order independence
+  ✅ washer_dryer alias → in_unit_laundry
+  ✅ Wrong borough must fail
+  ✅ Wrong search type must fail
+
+  Cross-format: 7/7 passed
+
+======================================================================
+🟢 OVERALL: 147/147 tests passed
+
+📊 Category breakdown:
+  for_rent_amenities: 8 tasks
+  for_rent_basic: 7 tasks
+  for_rent_complex: 4 tasks
+  for_rent_neighborhood: 5 tasks
+  for_rent_transit: 7 tasks
+  for_sale_amenities: 7 tasks
+  for_sale_basic: 10 tasks
+  for_sale_complex: 6 tasks
+  for_sale_neighborhood: 7 tasks
+  for_sale_prewar: 3 tasks
+  sold: 6 tasks
+
+📊 Difficulty breakdown:
+  easy: 8 tasks
+  hard: 23 tasks
+  medium: 39 tasks
+======================================================================

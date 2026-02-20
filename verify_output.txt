@@ -1,0 +1,14 @@
+================================================================================
+FULL SELF-MATCH TEST: All 70 Tasks
+================================================================================
+Results: 70/70 pass
+ALL 70 TASKS PASS SELF-MATCH!
+
+================================================================================
+EDGE CASE TESTS
+================================================================================
+
+Edge case results: 13/14 pass
+
+FAILURES:
+  sold type vs for-sale+status:sold: expected=True got=False details={'mismatches': ["Search type: 'sale' vs 'sold'"], 'extra_filters': []}

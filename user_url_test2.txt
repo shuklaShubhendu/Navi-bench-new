@@ -1,0 +1,11 @@
+1. Self-match: True
+
+2. new_developments:new development vs new_development:1: True
+
+3. new_developments:new development vs new_development:yes: True
+
+4. Normalized parse:
+   search_type: sale
+   location: manhattan
+   new_development: 1
+   type: D1

@@ -1,0 +1,155 @@
+<frozen runpy>:128: RuntimeWarning: 'navi_bench.streeteasy.streeteasy_url_match' found in sys.modules after import of package 'navi_bench.streeteasy', but prior to execution of 'navi_bench.streeteasy.streeteasy_url_match'; this may result in unpredictable behaviour
+================================================================================
+STREETEASY URL VERIFIER — COMPREHENSIVE EDGE CASE TEST SUITE
+Chrome-Verified Patterns (Feb 2026)
+================================================================================
+
+📁 1. Search Type Detection
+----------------------------------------
+  ✅ Sale search type
+  ✅ Rental search type
+  ✅ Sold search type
+  ✅ Sale vs Rent should NOT match
+  ✅ Sale vs Sold should NOT match
+
+📍 2. Location Parsing
+----------------------------------------
+  ✅ Manhattan location
+  ✅ Brooklyn location
+  ✅ Queens location
+  ✅ Manhattan vs Brooklyn should NOT match
+  ✅ Neighborhood location
+  ✅ Staten Island location
+
+💰 3. Price Filters
+----------------------------------------
+  ✅ Price range (Chrome-verified)
+  ✅ Min price only
+  ✅ Max price only
+  ✅ Price with commas vs without
+  ✅ Price abbreviation k
+  ✅ Price abbreviation m
+  ✅ Wrong price should NOT match
+
+🛏️  4. Beds Filter (Chrome-Verified)
+----------------------------------------
+  ✅ Exact beds
+  ✅ Studio (beds:0)
+  ✅ Min beds with >= (Chrome-verified)
+  ✅ Different beds should NOT match
+
+🚿 5. Baths Filter
+----------------------------------------
+  ✅ Exact baths (Chrome-verified)
+  ✅ Min baths with >=
+  ✅ Beds + Baths combo (Chrome-verified)
+
+🏠 6. Property Type — Codes (Chrome-Verified)
+----------------------------------------
+  ✅ Condo: type:D1 (Chrome-verified)
+  ✅ Co-op: type:P1 (Chrome-verified)
+  ✅ Combo: type:D1,P1 (Chrome-verified comma-delimited)
+  ✅ Combo order independent: D1,P1 vs P1,D1
+  ✅ Human-readable condo → D1
+  ✅ Human-readable co-op → P1
+  ✅ Human-readable condos → D1
+  ✅ Wrong type should NOT match
+
+✨ 7. Amenities — amenities: prefix (Chrome-Verified)
+----------------------------------------
+  ✅ Doorman (Chrome-verified: amenities:doorman)
+  ✅ Elevator (Chrome-verified: amenities:elevator)
+  ✅ Gym (Chrome-verified: amenities:gym)
+  ✅ Laundry (Chrome-verified: amenities:laundry)
+  ✅ Doorman + Elevator combo
+  ✅ In-unit laundry
+  ✅ Amenity alias: fitness → gym
+
+✨ 7b. Optional Amenities — opt_amenities: prefix (Chrome-Verified)
+----------------------------------------
+  ✅ opt_amenities:parking matches amenities:parking
+  ✅ opt_amenities:doorman,gym matches amenities:doorman,gym
+  ✅ amenities:parking matches opt_amenities:parking (reverse)
+  ✅ opt_amenities with other filters
+  ✅ opt_amenities does NOT match different amenity
+
+🐾 8. Pets Filter (Chrome-Verified)
+----------------------------------------
+  ✅ Pets allowed (Chrome-verified)
+  ✅ Pets NOT match different value
+
+📊 9. Status Filter
+----------------------------------------
+  ✅ Status open
+  ✅ Status sold (Chrome-verified)
+  ✅ Status active = open alias
+  ✅ Status in_contract vs in-contract
+
+📐 10. Square Footage
+----------------------------------------
+  ✅ SQFT range
+  ✅ Min SQFT with >=
+
+🏢 11. Rental-Specific Filters
+----------------------------------------
+  ✅ No fee
+  ✅ No-fee alias (hyphenated)
+  ✅ Furnished
+  ✅ Boolean true vs 1
+
+🏗️  12. Building Features
+----------------------------------------
+  ✅ Pre-war
+  ✅ Pre-war alias (pre_war)
+  ✅ Pre-war alias (pre-war)
+  ✅ New development
+
+💼 13. Sale-Specific Filters
+----------------------------------------
+  ✅ Sale type foreclosure
+
+🚇 14. Subway / Transit
+----------------------------------------
+  ✅ Subway L line
+  ✅ Subway case insensitive
+  ✅ Multiple subway lines
+
+🔄 15. Filter Order Independence
+----------------------------------------
+  ✅ Same filters different order (2 filters)
+  ✅ Same filters different order (3 filters)
+  ✅ Complex order independence (5 filters)
+
+🔤 16. Case Insensitivity
+----------------------------------------
+  ✅ Lowercase vs mixed case location
+  ✅ Uppercase filter key
+
+🌐 17. Domain & Protocol Variations
+----------------------------------------
+  ✅ http vs https
+  ✅ www vs no-www
+  ✅ No protocol
+
+📋 18. Sort Parameter (Ignored)
+----------------------------------------
+  ✅ Sort param ignored (Chrome-verified: ?sort_by=se_score)
+  ✅ Different sort params still match
+
+🎯 19. Complex Multi-Filter (Chrome-Verified URLs)
+----------------------------------------
+  ✅ Chrome URL #1: type + price + beds (Chrome-verified)
+  ✅ Chrome URL #2: type + price + beds + pets (Chrome-verified)
+  ✅ Chrome URL #3: all filters (Chrome-verified)
+  ✅ Missing filter should NOT match
+
+🏘️  20. Neighborhood + Filters
+----------------------------------------
+  ✅ Neighborhood with filters
+  ✅ Neighborhood filter order
+  ✅ Different neighborhood should NOT match
+
+================================================================================
+RESULTS: 82/82 tests passed
+🎉 ALL TESTS PASSED!
+================================================================================

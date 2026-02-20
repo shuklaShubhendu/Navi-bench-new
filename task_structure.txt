@@ -1,0 +1,8 @@
+{
+  "_target_": "navi_bench.streeteasy.streeteasy_url_match.generate_task_config",
+  "url": "https://streeteasy.com",
+  "task": "Find condos for sale in Manhattan priced between $500,000 and $1,000,000 with at least 2 bedrooms.",
+  "location": "New York, NY, United States",
+  "timezone": "America/New_York",
+  "ground_truth_url": "https://streeteasy.com/for-sale/manhattan/type:D1%7Cprice:500000-1000000%7Cbeds%3E=2?sort_by=se_score"
+}

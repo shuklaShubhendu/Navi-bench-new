@@ -1,0 +1,20 @@
+1. Self-match: True
+
+2. vs canonical (prewar:1): True
+
+3. vs prewar:yes: True
+
+4. beds:1-2 vs beds>=1 (should NOT match): False
+   Mismatches: ["Filter value mismatch: beds: '1-2' vs '1-'"]
+
+5. beds:1-2 vs beds:2-3 (should NOT match): False
+   Mismatches: ["Filter value mismatch: beds: '1-2' vs '2-3'"]
+
+6. Normalized parse:
+   search_type: sale
+   location: manhattan
+   amenities: doorman
+   beds: 1-2
+   prewar: 1
+   price: 1000000-3000000
+   type: D1

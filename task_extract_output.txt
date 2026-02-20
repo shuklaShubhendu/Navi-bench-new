@@ -1,0 +1,31 @@
+=== TASK 0 (for_sale_basic) ===
+DESCRIPTION: Find condos for sale in Manhattan priced between $500,000 and $1,000,000 with at least 2 bedrooms.
+GT_URL: https://streeteasy.com/for-sale/manhattan/type:D1%7Cprice:500000-1000000%7Cbeds%3E=2?sort_by=se_score
+
+=== TASK 16 (for_sale_amenities) ===
+DESCRIPTION: Find condos for sale in Manhattan with an elevator, priced between $500,000 and $1,500,000, with at least 1 bedroom.
+GT_URL: https://streeteasy.com/for-sale/manhattan/type:D1%7Cprice:500000-1500000%7Cbeds%3E=1%7Camenities:elevator?sort_by=se_score
+
+=== TASK 19 (for_sale_complex) ===
+DESCRIPTION: Find pre-war condos for sale in Manhattan with at least 2 bedrooms, a doorman, priced between $1,000,000 and $3,000,000.
+GT_URL: https://streeteasy.com/for-sale/manhattan/type:D1%7Cprice:1000000-3000000%7Cbeds%3E=2%7Camenities:doorman%7Cprewar:1?sort_by=se_score
+
+=== TASK 21 (for_sale_complex) ===
+DESCRIPTION: Find new development condos for sale in Manhattan.
+GT_URL: https://streeteasy.com/for-sale/manhattan/type:D1%7Cnew_development:1?sort_by=se_score
+
+=== TASK 37 (for_rent_basic) ===
+DESCRIPTION: Search for furnished 1-bedroom apartments for rent in Manhattan under $4,000 per month.
+GT_URL: https://streeteasy.com/for-rent/manhattan/price:-4000%7Cbeds:1%7Cfurnished:1?sort_by=se_score
+
+=== TASK 40 (for_rent_amenities) ===
+DESCRIPTION: Find pet-friendly rentals in Brooklyn with in-unit laundry and a doorman, priced between $2,000 and $4,000 per month.
+GT_URL: https://streeteasy.com/for-rent/brooklyn/price:2000-4000%7Camenities:doorman,in_unit_laundry%7Cpets:allowed?sort_by=se_score
+
+=== TASK 65 (sold) ===
+DESCRIPTION: Search for sold condos in Manhattan with 2+ bedrooms, a doorman, priced between $1,000,000 and $2,000,000.
+GT_URL: https://streeteasy.com/for-sale/manhattan/type:D1%7Cprice:1000000-2000000%7Cbeds%3E=2%7Cstatus:sold%7Camenities:doorman?sort_by=se_score
+
+=== TASK 67 (for_rent_complex) ===
+DESCRIPTION: Search for furnished apartments for rent in Manhattan with a doorman and elevator, at least 1 bedroom, under $5,000 per month.
+GT_URL: https://streeteasy.com/for-rent/manhattan/price:-5000%7Cbeds%3E=1%7Cfurnished:1%7Camenities:doorman,elevator?sort_by=se_score
