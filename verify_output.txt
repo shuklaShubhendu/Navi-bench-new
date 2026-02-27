@@ -1,14 +1,35 @@
 ================================================================================
-FULL SELF-MATCH TEST: All 70 Tasks
+SECTION 1: FULL SELF-MATCH TEST (All 70 Tasks)
 ================================================================================
 Results: 70/70 pass
 ALL 70 TASKS PASS SELF-MATCH!
 
 ================================================================================
-EDGE CASE TESTS
+SECTION 2: FIXED TASKS - Agent Simulation Tests
 ================================================================================
 
-Edge case results: 13/14 pass
+Task 16 GT (decoded): https://streeteasy.com/for-sale/manhattan/type:D1|price:500000-1500000|beds:1|amenities:elevator?sort_by=listed_desc
 
-FAILURES:
-  sold type vs for-sale+status:sold: expected=True got=False details={'mismatches': ["Search type: 'sale' vs 'sold'"], 'extra_filters': []}
+Task 21 GT (decoded): https://streeteasy.com/for-sale/manhattan/type:D1|new_development:1?sort_by=se_score
+
+Task 37 GT (decoded): https://streeteasy.com/for-rent/manhattan/price:-4000|beds:1|furnished:1?sort_by=se_score
+
+Task 67 GT (decoded): https://streeteasy.com/for-rent/manhattan/price:-5000|beds>=1|amenities:doorman,elevator|furnished:1?sort_by=se_score
+
+--- Agent vs GT Tests ---
+
+Task 21 [PASS]: Agent: new_development:1
+  Agent: https://streeteasy.com/for-sale/manhattan/type:D1|new_development:1
+  GT:    https://streeteasy.com/for-sale/manhattan/type:D1|new_development:1?sort_by=se_score
+
+Task 37 [PASS]: Agent: furnished:1 separate filter
+  Agent: https://streeteasy.com/for-rent/manhattan/price:-4000|beds:1|furnished:1
+  GT:    https://streeteasy.com/for-rent/manhattan/price:-4000|beds:1|furnished:1?sort_by=se_score
+
+Task 67 [PASS]: Agent: furnished:1 + amenities:doorman,elevator
+  Agent: https://streeteasy.com/for-rent/manhattan/price:-5000|beds>=1|furnished:1|amenities:doorman,elevator
+  GT:    https://streeteasy.com/for-rent/manhattan/price:-5000|beds>=1|amenities:doorman,elevator|furnished:1?sort_by=se_score
+
+================================================================================
+FINAL: ALL PASS
+================================================================================

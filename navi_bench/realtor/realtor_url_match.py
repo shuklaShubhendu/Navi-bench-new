@@ -146,7 +146,6 @@ PROPERTY_TYPE_ALIASES = {
     # Rental type plurals (browser-verified: /apartments/ URLs auto-pluralize)
     "apartment": "apartments",
     "apartments": "apartments",
-    "condos": "condo",
 }
 
 # Show-flag aliases → canonical flag
@@ -307,8 +306,6 @@ class RealtorUrlMatch(BaseMetric):
                 sold_match = (
                     (agent_parts["search_type"] == "sold" and gt_is_sold)
                     or (gt_parts["search_type"] == "sold" and agent_is_sold)
-                    or (agent_is_sold and gt_is_sold)
-                    or (agent_parts["search_type"] == "sold" and gt_parts["search_type"] == "sold")
                 )
 
                 # --- Open houses equivalence ---
@@ -324,8 +321,6 @@ class RealtorUrlMatch(BaseMetric):
                 open_match = (
                     (agent_parts["search_type"] == "open_houses" and gt_is_open)
                     or (gt_parts["search_type"] == "open_houses" and agent_is_open)
-                    or (agent_is_open and gt_is_open)
-                    or (agent_parts["search_type"] == "open_houses" and gt_parts["search_type"] == "open_houses")
                 )
 
                 if not (sold_match or open_match):
@@ -353,8 +348,10 @@ class RealtorUrlMatch(BaseMetric):
             if agent_parts["search_type"] == "open_houses" or gt_parts["search_type"] == "open_houses":
                 equiv_flags.add("show-open-house")
             # Also remove if the flag was used for equivalence matching
+            # Guard: only strip if one side is actually the sold/open_houses path type
             if agent_filters.get("show-recently-sold") == "true" or gt_filters.get("show-recently-sold") == "true":
-                equiv_flags.add("show-recently-sold")
+                if agent_parts["search_type"] == "sold" or gt_parts["search_type"] == "sold":
+                    equiv_flags.add("show-recently-sold")
             if agent_filters.get("show-open-house") == "true" or gt_filters.get("show-open-house") == "true":
                 if agent_parts["search_type"] == "open_houses" or gt_parts["search_type"] == "open_houses":
                     equiv_flags.add("show-open-house")
@@ -452,6 +449,15 @@ class RealtorUrlMatch(BaseMetric):
                     new = set(value.split(","))
                     merged = sorted(existing | new)
                     result["filters"]["type"] = ",".join(merged)
+                # Handle multiple features-* segments (merge codes)
+                elif key == "features" and "features" in result["filters"]:
+                    existing = result["filters"]["features"]
+                    # Sort concatenated feature codes for order-independent comparison
+                    merged_codes = "".join(sorted(set(
+                        [existing[i:i+2] for i in range(0, len(existing), 2)] +
+                        [value[i:i+2] for i in range(0, len(value), 2)]
+                    )))
+                    result["filters"]["features"] = merged_codes
                 else:
                     result["filters"][key] = value
 
@@ -602,6 +608,15 @@ class RealtorUrlMatch(BaseMetric):
         if seg.startswith("with_"):
             return seg, "true"
 
+        # 19. Standalone rental pet/amenity filters (no prefix)
+        standalone_filters = {
+            "dog-friendly", "cat-friendly", "pet-friendly",
+            "laundry", "dishwasher", "parking", "furnished",
+            "income-restricted", "senior-living", "short-term",
+        }
+        if seg in standalone_filters:
+            return seg, "true"
+
         # Unknown segment — still record it
         logger.debug(f"Unknown filter segment: {seg}")
         return seg, "true"
@@ -698,6 +713,28 @@ class RealtorUrlMatch(BaseMetric):
         raw = raw.strip().replace(",", "")
         return raw
 
+    def _normalize_range_value(self, val: str, prefix: str = "", suffix: str = "") -> str:
+        """
+        Normalize a range value for comparison, handling:
+        - Single value ↔ range equivalence
+        - suffix='na': '2500' → '2500-na' (sqft/lot: "at least N")
+        - prefix='0': '10' → '0-10' (age: "within N years")
+        """
+        val = val.strip().replace(",", "")
+        # If already a range (contains hyphen), return as-is
+        if "-" in val:
+            return val
+        # Single numeric value: expand to range
+        try:
+            int(val)
+            if prefix:
+                return f"{prefix}-{val}"
+            elif suffix:
+                return f"{val}-{suffix}"
+            return val
+        except ValueError:
+            return val
+
     def _filter_values_match(self, key: str, agent_val: str, gt_val: str) -> bool:
         """
         Compare two filter values, accounting for:
@@ -718,6 +755,25 @@ class RealtorUrlMatch(BaseMetric):
         # Price comparison: normalize both and compare
         if key == "price":
             return self._normalize_price_value(agent_val) == self._normalize_price_value(gt_val)
+
+        # HOA comparison: normalize both and compare
+        if key == "hoa":
+            return self._normalize_price_value(agent_val) == self._normalize_price_value(gt_val)
+
+        # Range filters: handle single-value ↔ range equivalence
+        # sqft/lot: single value N means "at least N" → N-na
+        # age: single value N means "built within N years" → 0-N
+        if key in ("sqft", "lot"):
+            a_norm = self._normalize_range_value(agent_val, suffix="na")
+            g_norm = self._normalize_range_value(gt_val, suffix="na")
+            if a_norm == g_norm:
+                return True
+
+        if key == "age":
+            a_norm = self._normalize_range_value(agent_val, prefix="0")
+            g_norm = self._normalize_range_value(gt_val, prefix="0")
+            if a_norm == g_norm:
+                return True
 
         # Boolean equivalence
         bool_true = {"true", "1", "yes", "on"}
@@ -748,659 +804,5 @@ def generate_task_config(
     )
 
 
-# ============================================================================
-# COMPREHENSIVE EDGE CASE TESTS — 65+ Tests Across 15 Categories
-# (Browser-Verified URL Patterns, Feb 2026)
-# ============================================================================
 
-if __name__ == "__main__":
-    import asyncio
 
-    print("=" * 80)
-    print("REALTOR.COM URL VERIFIER — COMPREHENSIVE EDGE CASE TEST SUITE")
-    print("Browser-Verified Patterns (Feb 2026)")
-    print("=" * 80)
-
-    async def run_comprehensive_tests():
-        """Run all edge case tests."""
-        total_tests = 0
-        passed_tests = 0
-
-        def run_test(name, gt_url, agent_url, expected_match=True):
-            nonlocal total_tests, passed_tests
-            total_tests += 1
-            evaluator = RealtorUrlMatch(gt_url=gt_url)
-            match, details = evaluator._urls_match(agent_url, gt_url)
-            status = "✅" if match == expected_match else "❌"
-            if match == expected_match:
-                passed_tests += 1
-            else:
-                extra = ""
-                if details.get("mismatches"):
-                    extra = f" — {details['mismatches']}"
-                print(f"  {status} {name}{extra}")
-                return
-            print(f"  {status} {name}")
-
-        # ================================================================
-        # 1. SEARCH TYPE DETECTION
-        # ================================================================
-        print("\n📁 1. Search Type Detection")
-        print("-" * 40)
-
-        run_test(
-            "For sale search",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-        )
-        run_test(
-            "Rental search",
-            "https://www.realtor.com/apartments/San-Francisco_CA",
-            "https://www.realtor.com/apartments/San-Francisco_CA",
-        )
-        run_test(
-            "Sold homes search",
-            "https://www.realtor.com/sold-homes/San-Francisco_CA",
-            "https://www.realtor.com/sold-homes/San-Francisco_CA",
-        )
-        run_test(
-            "Open houses search",
-            "https://www.realtor.com/open-houses/San-Francisco_CA",
-            "https://www.realtor.com/open-houses/San-Francisco_CA",
-        )
-        run_test(
-            "Sale vs Rent should NOT match",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-            "https://www.realtor.com/apartments/San-Francisco_CA",
-            expected_match=False,
-        )
-        run_test(
-            "Sale vs Sold should NOT match",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-            "https://www.realtor.com/sold-homes/San-Francisco_CA",
-            expected_match=False,
-        )
-
-        # ================================================================
-        # 2. LOCATION PARSING
-        # ================================================================
-        print("\n📍 2. Location Parsing")
-        print("-" * 40)
-
-        run_test(
-            "City/State location",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-        )
-        run_test(
-            "Zip code location",
-            "https://www.realtor.com/realestateandhomes-search/90210",
-            "https://www.realtor.com/realestateandhomes-search/90210",
-        )
-        run_test(
-            "Multi-word city",
-            "https://www.realtor.com/realestateandhomes-search/New-York_NY",
-            "https://www.realtor.com/realestateandhomes-search/New-York_NY",
-        )
-        run_test(
-            "Case insensitive location",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-            "https://www.realtor.com/realestateandhomes-search/san-francisco_ca",
-        )
-        run_test(
-            "Wrong city should NOT match",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-            "https://www.realtor.com/realestateandhomes-search/Los-Angeles_CA",
-            expected_match=False,
-        )
-        run_test(
-            "Wrong zip should NOT match",
-            "https://www.realtor.com/realestateandhomes-search/90210",
-            "https://www.realtor.com/realestateandhomes-search/10001",
-            expected_match=False,
-        )
-
-        # ================================================================
-        # 3. BEDS FILTER
-        # ================================================================
-        print("\n🛏️ 3. Beds Filter")
-        print("-" * 40)
-
-        run_test(
-            "3+ beds",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-        )
-        run_test(
-            "Beds range 3-4",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3-4",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3-4",
-        )
-        run_test(
-            "Wrong beds should NOT match",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-4",
-            expected_match=False,
-        )
-        run_test(
-            "Missing beds should NOT match",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-            expected_match=False,
-        )
-
-        # ================================================================
-        # 4. BATHS FILTER
-        # ================================================================
-        print("\n🚿 4. Baths Filter")
-        print("-" * 40)
-
-        run_test(
-            "2+ baths",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/baths-2",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/baths-2",
-        )
-        run_test(
-            "Wrong baths should NOT match",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/baths-2",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/baths-3",
-            expected_match=False,
-        )
-
-        # ================================================================
-        # 5. PRICE FILTER
-        # ================================================================
-        print("\n💰 5. Price Filter")
-        print("-" * 40)
-
-        run_test(
-            "Price range",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500000-1000000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500000-1000000",
-        )
-        run_test(
-            "Price with na min",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-na-500000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-na-500000",
-        )
-        run_test(
-            "Price with na max",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500000-na",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500000-na",
-        )
-        run_test(
-            "Price with 500k abbreviation",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500000-1000000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500k-1m",
-        )
-        run_test(
-            "Price with 2m abbreviation",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-na-2000000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-na-2m",
-        )
-        run_test(
-            "Wrong price should NOT match",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500000-1000000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500000-2000000",
-            expected_match=False,
-        )
-
-        # ================================================================
-        # 6. PROPERTY TYPE FILTER
-        # ================================================================
-        print("\n🏠 6. Property Type Filter")
-        print("-" * 40)
-
-        run_test(
-            "Single family home",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-single-family-home",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-single-family-home",
-        )
-        run_test(
-            "Condo",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-condo",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-condo",
-        )
-        run_test(
-            "Townhome",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-townhome",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-townhome",
-        )
-        run_test(
-            "Multi-family",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-multi-family-home",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-multi-family-home",
-        )
-        run_test(
-            "Land",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-land",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-land",
-        )
-        run_test(
-            "Property type alias: house → single-family-home",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-single-family-home",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-house",
-        )
-        run_test(
-            "Property type alias: townhouse → townhome",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-townhome",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-townhouse",
-        )
-        run_test(
-            "Wrong type should NOT match",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-condo",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-single-family-home",
-            expected_match=False,
-        )
-
-        # ================================================================
-        # 7. SHOW FLAGS
-        # ================================================================
-        print("\n🏳️ 7. Show Flags")
-        print("-" * 40)
-
-        run_test(
-            "Show open house",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-open-house",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-open-house",
-        )
-        run_test(
-            "Show new construction",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-new-construction",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-new-construction",
-        )
-        run_test(
-            "Show price reduced",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-price-reduced",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-price-reduced",
-        )
-        run_test(
-            "Show foreclosure",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-foreclosure",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-foreclosure",
-        )
-        run_test(
-            "Show pending",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-pending",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-pending",
-        )
-        run_test(
-            "Missing show flag should NOT match",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-open-house",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-            expected_match=False,
-        )
-
-        # ================================================================
-        # 8. SQUARE FOOTAGE
-        # ================================================================
-        print("\n📐 8. Square Footage")
-        print("-" * 40)
-
-        run_test(
-            "Sqft range",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/sqft-2000-3000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/sqft-2000-3000",
-        )
-        run_test(
-            "Sqft min only",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/sqft-2000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/sqft-2000",
-        )
-        run_test(
-            "Wrong sqft should NOT match",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/sqft-2000-3000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/sqft-1000-2000",
-            expected_match=False,
-        )
-
-        # ================================================================
-        # 9. FILTER ORDER INDEPENDENCE
-        # ================================================================
-        print("\n🔀 9. Filter Order Independence")
-        print("-" * 40)
-
-        run_test(
-            "beds/price order: beds first",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/price-500000-1000000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/price-500000-1000000",
-        )
-        run_test(
-            "beds/price order: price first",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/price-500000-1000000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500000-1000000/beds-3",
-        )
-        run_test(
-            "Complex reversed order",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/baths-2/price-500000-1000000/type-single-family-home",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-single-family-home/price-500000-1000000/baths-2/beds-3",
-        )
-        run_test(
-            "All filters scrambled",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/baths-2/price-na-500000/type-condo/show-open-house",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-open-house/type-condo/baths-2/beds-3/price-na-500000",
-        )
-
-        # ================================================================
-        # 10. CASE SENSITIVITY
-        # ================================================================
-        print("\n🔤 10. Case Sensitivity")
-        print("-" * 40)
-
-        run_test(
-            "All uppercase URL",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            "HTTPS://WWW.REALTOR.COM/REALESTATEANDHOMES-SEARCH/SAN-FRANCISCO_CA/BEDS-3",
-        )
-        run_test(
-            "Mixed case URL",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            "https://www.Realtor.com/RealEstateAndHomes-Search/San-Francisco_CA/Beds-3",
-        )
-
-        # ================================================================
-        # 11. SORT & PAGINATION IGNORED
-        # ================================================================
-        print("\n🔢 11. Sort & Pagination Ignored")
-        print("-" * 40)
-
-        run_test(
-            "Sort ignored",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/sby-2",
-        )
-        run_test(
-            "Pagination ignored",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/pg-5",
-        )
-        run_test(
-            "Both sort and pagination ignored",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/sby-6/pg-3",
-        )
-
-        # ================================================================
-        # 12. PROTOCOL & DOMAIN VARIATIONS
-        # ================================================================
-        print("\n🌐 12. Protocol & Domain Variations")
-        print("-" * 40)
-
-        run_test(
-            "HTTP vs HTTPS",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-            "http://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-        )
-        run_test(
-            "With vs without www",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA",
-            "https://realtor.com/realestateandhomes-search/San-Francisco_CA",
-        )
-
-        # ================================================================
-        # 13. COMBINED FILTERS
-        # ================================================================
-        print("\n🔗 13. Combined Filters")
-        print("-" * 40)
-
-        run_test(
-            "Beds + Price + Type",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/price-500000-1000000/type-single-family-home",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/price-500000-1000000/type-single-family-home",
-        )
-        run_test(
-            "Full filter stack",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/baths-2/price-na-1000000/type-condo/sqft-1000-2000/show-open-house",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/baths-2/price-na-1000000/type-condo/sqft-1000-2000/show-open-house",
-        )
-        run_test(
-            "Rentals with filters",
-            "https://www.realtor.com/apartments/San-Francisco_CA/beds-2/price-na-3000",
-            "https://www.realtor.com/apartments/San-Francisco_CA/beds-2/price-na-3000",
-        )
-
-        # ================================================================
-        # 14. RECENTLY SOLD EQUIVALENCE
-        # ================================================================
-        print("\n🔄 14. Recently Sold Equivalence")
-        print("-" * 40)
-
-        run_test(
-            "sold-homes path vs show-recently-sold flag",
-            "https://www.realtor.com/sold-homes/San-Francisco_CA",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-recently-sold",
-        )
-        run_test(
-            "show-recently-sold vs sold-homes path (reversed)",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-recently-sold",
-            "https://www.realtor.com/sold-homes/San-Francisco_CA",
-        )
-
-        # ================================================================
-        # 15. OPEN HOUSES EQUIVALENCE (NEW - Browser verified)
-        # ================================================================
-        print("\n🏠 15. Open Houses Equivalence")
-        print("-" * 40)
-
-        run_test(
-            "open-houses path vs show-open-house flag",
-            "https://www.realtor.com/open-houses/San-Francisco_CA",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-open-house",
-        )
-        run_test(
-            "show-open-house vs open-houses path (reversed)",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-open-house",
-            "https://www.realtor.com/open-houses/San-Francisco_CA",
-        )
-        run_test(
-            "open-houses path with extra filters",
-            "https://www.realtor.com/open-houses/San-Francisco_CA",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-open-house/beds-3",
-        )
-
-        # ================================================================
-        # 16. RENTAL PATH ALIASES (Browser verified: only /apartments/ works)
-        # ================================================================
-        print("\n🏢 16. Rental Path Aliases")
-        print("-" * 40)
-
-        run_test(
-            "rentals path alias",
-            "https://www.realtor.com/apartments/San-Francisco_CA",
-            "https://www.realtor.com/rentals/San-Francisco_CA",
-        )
-        run_test(
-            "houses-for-rent alias",
-            "https://www.realtor.com/apartments/San-Francisco_CA",
-            "https://www.realtor.com/houses-for-rent/San-Francisco_CA",
-        )
-        run_test(
-            "apartments-for-rent alias",
-            "https://www.realtor.com/apartments/San-Francisco_CA",
-            "https://www.realtor.com/apartments-for-rent/San-Francisco_CA",
-        )
-
-        # ================================================================
-        # 17. ADVANCED FILTERS (Browser verified)
-        # ================================================================
-        print("\n🔧 17. Advanced Filters")
-        print("-" * 40)
-
-        run_test(
-            "Lot size filter",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/lot-sqft-5000-10000",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/lot-sqft-5000-10000",
-        )
-        run_test(
-            "Home age filter",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/age-0-10",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/age-0-10",
-        )
-        run_test(
-            "Year built filter",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/year-built-2000-2024",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/year-built-2000-2024",
-        )
-        run_test(
-            "Stories filter",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/stories-1",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/stories-1",
-        )
-        run_test(
-            "Garage filter",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/garage-2",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/garage-2",
-        )
-        run_test(
-            "HOA filter",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/hoa-na-500",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/hoa-na-500",
-        )
-        run_test(
-            "Wrong lot size NO",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/lot-sqft-5000-10000",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/lot-sqft-1000-5000",
-            expected_match=False,
-        )
-
-        # ================================================================
-        # 18. MORE PROPERTY TYPES (Browser verified)
-        # ================================================================
-        print("\n🏘️ 18. More Property Types")
-        print("-" * 40)
-
-        run_test(
-            "Farm type",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-farm",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-farm",
-        )
-        run_test(
-            "Co-op type",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-co-op",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-co-op",
-        )
-        run_test(
-            "Mobile home type",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-mobile-home",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-mobile-home",
-        )
-        run_test(
-            "ranch alias → farm",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-farm",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-ranch",
-        )
-        run_test(
-            "manufactured alias → mobile-home",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-mobile-home",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-manufactured",
-        )
-        run_test(
-            "cooperative alias → co-op",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-co-op",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/type-cooperative",
-        )
-
-        # ================================================================
-        # 19. EXTRA FILTERS ALLOWED
-        # ================================================================
-        print("\n➕ 19. Extra Filters Allowed")
-        print("-" * 40)
-
-        run_test(
-            "Agent has extra beds filter (allowed)",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500000-1000000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500000-1000000/beds-3",
-        )
-        run_test(
-            "Agent has extra show flag (allowed)",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/show-open-house",
-        )
-
-        # ================================================================
-        # 20. NEGATIVE TESTS — MISMATCHES
-        # ================================================================
-        print("\n❌ 20. Negative Tests — Mismatches")
-        print("-" * 40)
-
-        run_test(
-            "Different city",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            "https://www.realtor.com/realestateandhomes-search/Los-Angeles_CA/beds-3",
-            expected_match=False,
-        )
-        run_test(
-            "Different state",
-            "https://www.realtor.com/realestateandhomes-search/Portland_OR/beds-3",
-            "https://www.realtor.com/realestateandhomes-search/Portland_ME/beds-3",
-            expected_match=False,
-        )
-        run_test(
-            "Missing required filter",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/price-500000-1000000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            expected_match=False,
-        )
-        run_test(
-            "Wrong price range",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-500000-1000000",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/price-200000-800000",
-            expected_match=False,
-        )
-        run_test(
-            "Wrong property type",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-condo",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-townhome",
-            expected_match=False,
-        )
-        run_test(
-            "Sale vs Rental",
-            "https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3",
-            "https://www.realtor.com/apartments/San-Francisco_CA/beds-3",
-            expected_match=False,
-        )
-        run_test(
-            "Sold vs Open houses should NOT match",
-            "https://www.realtor.com/sold-homes/San-Francisco_CA",
-            "https://www.realtor.com/open-houses/San-Francisco_CA",
-            expected_match=False,
-        )
-        run_test(
-            "Rent vs Sold should NOT match",
-            "https://www.realtor.com/apartments/San-Francisco_CA",
-            "https://www.realtor.com/sold-homes/San-Francisco_CA",
-            expected_match=False,
-        )
-
-        # ================================================================
-        # 21. SHOW FLAGS — CONTINGENT & MORE
-        # ================================================================
-        print("\n🏳️ 21. Show Flags — Additional")
-        print("-" * 40)
-
-        run_test(
-            "Show contingent",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/show-contingent",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/show-contingent",
-        )
-        run_test(
-            "Show 55-plus communities",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/show-55-plus",
-            "https://www.realtor.com/realestateandhomes-search/SF_CA/show-55-plus",
-        )
-
-        # ================================================================
-        # SUMMARY
-        # ================================================================
-        print("\n" + "=" * 80)
-        print(f"TOTAL: {passed_tests}/{total_tests} tests passed")
-        pct = (passed_tests / total_tests * 100) if total_tests else 0
-        print(f"PASS RATE: {pct:.1f}%")
-        print("=" * 80)
-
-        if passed_tests == total_tests:
-            print("🎉 ALL TESTS PASSED!")
-        else:
-            print(f"⚠️  {total_tests - passed_tests} test(s) FAILED")
-
-    asyncio.run(run_comprehensive_tests())

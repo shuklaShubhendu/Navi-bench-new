@@ -1,0 +1,11 @@
+Parsed agent_with_rect:
+  search_type: rent
+  location: manhattan
+  filters: {'price': '-3500', 'beds': '1'}
+
+Parsed GT:
+  filters: {'price': '-3500', 'beds': '1'}
+
+Without in_rect: match=True details={'mismatches': [], 'extra_filters': []}
+With in_rect:    match=True details={'mismatches': [], 'extra_filters': []}
+Both have rect:  match=True
