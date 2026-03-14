@@ -6,7 +6,7 @@ by gathering event information through JavaScript scraping and matching against 
 Modeled after the StubHub verifier with a 3-layer extraction pipeline:
 1. URL parsing (page type, event ID, filters)
 2. LD+JSON extraction (event details, pricing, inventory)
-3. DOM scraping (ticket listings via aria-label)
+3. DOM scraping (ticket listings via aria-label, filter state, listing tags)
 """
 
 import functools
@@ -48,6 +48,7 @@ class SingleCandidateQuery(TypedDict, total=False):
     # Ticket Type Filters
     ticket_type: str | None  # standard, vip, premium, general_admission
     accessible_seating: bool | None
+    aisle_seat: bool | None  # True if aisle seat required
     
     # SeatGeek-specific
     deal_score_min: int | None  # Minimum Deal Score (1-10)
@@ -78,11 +79,14 @@ class MultiCandidateQuery(TypedDict, total=False):
     rows: list[str] | None
     
     # Ticket Type Filters
-    ticket_types: list[str] | None
+    ticket_types: list[str] | None  # standard, vip, premium, general_admission
     accessible_seating: bool | None
+    aisle_seat: bool | None  # True if aisle seat required
+    instant_delivery: bool | None  # True if instant delivery required
     
     # SeatGeek-specific
     deal_score_min: int | None  # Minimum Deal Score (1-10)
+    listing_tags: list[str] | None  # cheapest, best_in_section, aisle, etc.
     
     # Availability
     require_available: bool | None
@@ -119,6 +123,8 @@ class InfoDict(TypedDict, total=False):
     date: str  # YYYY-MM-DD
     time: str  # HH:MM
     startDate: str  # ISO format from LD+JSON
+    endDate: str
+    doorTime: str
     
     # Location
     venue: str
@@ -126,6 +132,9 @@ class InfoDict(TypedDict, total=False):
     state: str
     country: str
     postalCode: str
+    streetAddress: str
+    latitude: float
+    longitude: float
     
     # Teams/Performers
     competitors: list[str]
@@ -139,8 +148,11 @@ class InfoDict(TypedDict, total=False):
     
     # Pricing (from DOM listings)
     price: float
+    priceWithFees: float
     listingLowPrice: float
     listingHighPrice: float
+    listingLowPriceWithFees: float
+    listingHighPriceWithFees: float
     
     # Ticket Details (from DOM listings)
     section: str
@@ -150,12 +162,25 @@ class InfoDict(TypedDict, total=False):
     dealScore: int  # SeatGeek Deal Score (1-10)
     availableSections: list[str]
     totalListings: int
+    listingCountText: int
+    
+    # Listing Tags (from DOM)
+    listingTags: list[str]  # cheapest, best_in_section, aisle, etc.
+    availableTags: list[str]
+    hasAisleSeats: bool
+    isAisle: bool
+    
+    # Filter State (from DOM)
+    filterState: dict
     
     # URL Filter State
     urlQuantity: int
     urlMaxPrice: float
+    urlMinPrice: float
     urlCity: str
     urlSearch: str
+    urlPerks: str
+    urlSection: str
     
     # Page Metadata
     pageType: str  # event_listing, performer, category, search, homepage
@@ -168,11 +193,14 @@ class InfoDict(TypedDict, total=False):
     ogUrl: str
     
     # Availability Status
-    availabilityStatus: str  # available, sold_out
+    availabilityStatus: str  # available, sold_out, cancelled, rescheduled
     info: str  # available, sold_out (compat with StubHub)
+    eventStatus: str  # From LD+JSON
+    offerAvailability: str  # From LD+JSON
     
     # Source tracking
     source: str  # ld+json, dom, dom_listing, seatgeek
+    offerUrl: str
 
 
 class FinalResult(BaseModel):
@@ -184,6 +212,53 @@ class FinalResult(BaseModel):
     is_query_covered: list[bool]
 
 
+# ==================== DATE HELPER FUNCTIONS ====================
+
+
+def get_next_weekend_dates() -> list[str]:
+    """Get dates for the next weekend (Saturday and Sunday)."""
+    today = datetime.now()
+    days_until_saturday = (5 - today.weekday()) % 7
+    if days_until_saturday == 0:
+        days_until_saturday = 7
+    
+    saturday = today + timedelta(days=days_until_saturday)
+    sunday = saturday + timedelta(days=1)
+    
+    return [
+        saturday.strftime("%Y-%m-%d"),
+        sunday.strftime("%Y-%m-%d")
+    ]
+
+
+def get_upcoming_weekday(weekday_name: str) -> str:
+    """Get date for the next occurrence of a weekday.
+    
+    Args:
+        weekday_name: Full weekday name (e.g., "Friday", "Saturday")
+    
+    Returns:
+        Date string in YYYY-MM-DD format.
+    """
+    weekday_map = {
+        "Monday": 0, "Tuesday": 1, "Wednesday": 2, "Thursday": 3,
+        "Friday": 4, "Saturday": 5, "Sunday": 6
+    }
+    
+    target_day = weekday_map[weekday_name]
+    today = datetime.now()
+    days_ahead = (target_day - today.weekday()) % 7
+    
+    if days_ahead == 0:
+        days_ahead = 7
+    
+    target_date = today + timedelta(days=days_ahead)
+    return target_date.strftime("%Y-%m-%d")
+
+
+# ==================== MAIN VERIFIER CLASS ====================
+
+
 @beartype
 class SeatGeekInfoGathering(BaseMetric):
     """Gather event ticket information from SeatGeek to evaluate query coverage.
@@ -191,7 +266,8 @@ class SeatGeekInfoGathering(BaseMetric):
     This verifier uses a 3-layer approach:
     1. URL parsing — event ID, category, page type, filter params
     2. LD+JSON extraction — event name, date, venue, teams, prices, inventory
-    3. DOM scraping — ticket listings (section, row, price, Deal Score from aria-label)
+    3. DOM scraping — ticket listings (section, row, price, Deal Score from aria-label),
+       listing tags (cheapest, aisle, etc.), filter state
     
     The verifier tracks navigation across multiple pages and walks the stack
     backwards to find the most recent relevant page for matching.
@@ -358,8 +434,12 @@ class SeatGeekInfoGathering(BaseMetric):
         }
         
         if existing_idx is not None:
-            self._navigation_stack[existing_idx] = page_entry
-            logger.info(f"Page type: {page_type} (updated existing, stack depth: {len(self._navigation_stack)})")
+            # P-1 FIX: Remove old entry and append at end to maintain correct
+            # visit order. In-place update would keep the old index position,
+            # causing reversed() traversal to treat a revisited page as stale.
+            self._navigation_stack.pop(existing_idx)
+            self._navigation_stack.append(page_entry)
+            logger.info(f"Page type: {page_type} (moved to end, stack depth: {len(self._navigation_stack)})")
         else:
             self._navigation_stack.append(page_entry)
             logger.info(f"Page type: {page_type} (new page, stack depth: {len(self._navigation_stack)})")
@@ -475,10 +555,10 @@ class SeatGeekInfoGathering(BaseMetric):
         # ========== EVENT SEARCH FILTERS ==========
         
         # Check event names using SUBSTRING matching
+        # SeatGeek advantage: also checks competitors[] and performers[] from LD+JSON
         if query_names := query.get("event_names"):
             query_names = [name.lower() for name in query_names]
             event_name = info.get("eventName", "").lower()
-            # Also check competitors and performers
             competitors = [c.lower() for c in info.get("competitors", [])]
             performers = [p.lower() for p in info.get("performers", [])]
             all_names = [event_name] + competitors + performers
@@ -508,96 +588,161 @@ class SeatGeekInfoGathering(BaseMetric):
                 return False
 
         # Check venues using SUBSTRING matching
+        # BUG 2 FIX: If query requires venues, info MUST have a venue to match
         if venues := query.get("venues"):
             venues = [v.lower() for v in venues]
             venue = info.get("venue", "").lower()
-            if venue and not any(v in venue for v in venues):
+            if not venue:
+                return False
+            if not any(v in venue for v in venues):
                 return False
 
         # Check cities using SUBSTRING matching
+        # IMPORTANT: If query requires cities, info MUST have a city to match
         if cities := query.get("cities"):
             cities = [c.lower() for c in cities]
             city = (info.get("city") or "").lower()
             url_city = (info.get("urlCity") or "").lower().replace("-", " ")
             all_cities = [city, url_city]
             
+            # Must have at least one non-empty city source
+            if not any(ci for ci in all_cities):
+                return False
             if not any(c in ci for c in cities for ci in all_cities if ci):
                 return False
 
         # ========== TICKET LISTING FILTERS ==========
         
         # Check minimum tickets
-        if min_tickets := query.get("min_tickets"):
-            ticket_count = info.get("ticketCount", 0)
-            if ticket_count and ticket_count < min_tickets:
+        # BUG 3 FIX: Use `is not None` instead of falsy check (ticketCount=0 is valid)
+        if (min_tickets := query.get("min_tickets")) is not None:
+            ticket_count = info.get("ticketCount")
+            if ticket_count is not None and ticket_count < min_tickets:
                 return False
 
         # Check maximum tickets
-        if max_tickets := query.get("max_tickets"):
-            ticket_count = info.get("ticketCount", 0)
-            if ticket_count and ticket_count > max_tickets:
+        if (max_tickets := query.get("max_tickets")) is not None:
+            ticket_count = info.get("ticketCount")
+            if ticket_count is not None and ticket_count > max_tickets:
                 return False
 
         # Check exact ticket quantities
         if ticket_quantities := query.get("ticket_quantities"):
-            ticket_count = info.get("ticketCount", 0)
-            if ticket_count and ticket_count not in ticket_quantities:
+            ticket_count = info.get("ticketCount")
+            if ticket_count is not None and ticket_count not in ticket_quantities:
                 return False
 
-        # Check maximum price — using LD+JSON lowPrice (cheapest ticket)
-        if max_price := query.get("max_price"):
-            # LD+JSON: check if cheapest ticket is within range
+        # Check maximum price — using cascading fallback:
+        # LD+JSON lowPrice → DOM listing low → individual listing price
+        # BUG 4 FIX: Use `is not None` to handle max_price=0.0 edge case
+        if (max_price := query.get("max_price")) is not None:
             low_price = info.get("lowPrice")
             listing_low = info.get("listingLowPrice")
             price = info.get("price")
             
-            cheapest = low_price or listing_low or price
+            # Pick first non-None price in fallback chain
+            cheapest = low_price if low_price is not None else (listing_low if listing_low is not None else price)
             if cheapest is not None and cheapest > max_price:
                 return False
 
         # Check minimum price
-        if min_price := query.get("min_price"):
-            price = info.get("price") or info.get("lowPrice")
-            if price is not None and price < min_price:
+        # P-6 FIX: Use same fallback chain as max_price: lowPrice → listingLowPrice → price
+        if (min_price := query.get("min_price")) is not None:
+            low_price = info.get("lowPrice")
+            listing_low = info.get("listingLowPrice")
+            price = info.get("price")
+            cheapest = low_price if low_price is not None else (listing_low if listing_low is not None else price)
+            if cheapest is not None and cheapest < min_price:
                 return False
 
-        # Check sections using SUBSTRING matching
+        # Check sections using EXACT matching
+        # BUG 11 FIX: Use exact equality to prevent section "1" matching "11"
         if sections := query.get("sections"):
             sections = [s.lower() for s in sections]
             section = info.get("section", "").lower()
             available_sections = [s.lower() for s in info.get("availableSections", [])]
             all_sections = [section] + available_sections
             
-            if not any(s in sec for s in sections for sec in all_sections if sec):
+            if not any(s == sec for s in sections for sec in all_sections if sec):
                 return False
 
-        # Check rows using SUBSTRING matching
+        # Check rows using EXACT matching (row "1" must not match "15")
         if rows := query.get("rows"):
             rows = [r.lower() for r in rows]
             row = info.get("row", "").lower()
-            if row and not any(r in row for r in rows):
+            if row and row not in rows:
                 return False
+
+        # Check aisle seat requirement
+        if query.get("aisle_seat") is True:
+            has_aisle = info.get("hasAisleSeats", False) or info.get("isAisle", False)
+            if not has_aisle:
+                return False
+
+        # ========== TICKET TYPE FILTERS ==========
+
+        # Check ticket types
+        if ticket_types := query.get("ticket_types"):
+            ticket_types = [t.lower() for t in ticket_types]
+            # SeatGeek doesn't have explicit ticket type field,
+            # but we can check listing tags and event category
+            listing_tags = [t.lower() for t in info.get("listingTags", [])]
+            available_tags = [t.lower() for t in info.get("availableTags", [])]
+            all_tags = listing_tags + available_tags
+            # P-3 FIX: Remove `if all_tags` guard — when ticket_types is required
+            # but no tag data exists, the match should FAIL, not silently pass.
+            if not any(t in tag for t in ticket_types for tag in all_tags):
+                return False
+
+        # Check accessible seating requirement
+        if query.get("accessible_seating") is True:
+            # SeatGeek accessible seating is a seat perk, check URL perks
+            url_perks = (info.get("urlPerks") or "").lower()
+            if url_perks and "accessible" not in url_perks:
+                return False
+
+        # Check instant delivery requirement
+        # P-4 FIX: Only reject if filterState explicitly has instantDelivery=False.
+        # When filterState is empty/missing (JS couldn't extract it), don't block.
+        if query.get("instant_delivery") is True:
+            filter_state = info.get("filterState")
+            if isinstance(filter_state, dict) and "instantDelivery" in filter_state:
+                if not filter_state["instantDelivery"]:
+                    return False
 
         # ========== SEATGEEK-SPECIFIC FILTERS ==========
         
         # Check Deal Score minimum
-        if deal_score_min := query.get("deal_score_min"):
+        # P-5 FIX: Use `is not None` to handle deal_score_min=0 edge case
+        if (deal_score_min := query.get("deal_score_min")) is not None:
             deal_score = info.get("dealScore")
             if deal_score is not None and deal_score < deal_score_min:
+                return False
+
+        # Check listing tags
+        # P-2 FIX: Remove `if all_tags` guard — when listing_tags is required
+        # but no tag data exists, the match should FAIL, not silently pass.
+        if required_tags := query.get("listing_tags"):
+            required_tags = [t.lower() for t in required_tags]
+            listing_tags = [t.lower() for t in info.get("listingTags", [])]
+            available_tags = [t.lower() for t in info.get("availableTags", [])]
+            all_tags = listing_tags + available_tags
+            if not any(t in tag for t in required_tags for tag in all_tags):
                 return False
 
         # ========== URL-BASED VERIFICATION ==========
         
         # Check URL quantity
-        if url_quantity := query.get("url_quantity"):
+        # BUG 4 FIX: Use `is not None` to handle url_quantity=0 edge case
+        if (url_quantity := query.get("url_quantity")) is not None:
             info_url_quantity = info.get("urlQuantity")
-            if info_url_quantity and info_url_quantity != url_quantity:
+            if info_url_quantity is not None and info_url_quantity != url_quantity:
                 return False
         
         # Check URL max price
-        if url_max_price := query.get("url_max_price"):
+        if (url_max_price := query.get("url_max_price")) is not None:
             info_url_max = info.get("urlMaxPrice")
-            if info_url_max and info_url_max != url_max_price:
+            if info_url_max is not None and info_url_max != url_max_price:
                 return False
 
         # ========== PAGE TYPE REQUIREMENT ==========
@@ -610,11 +755,12 @@ class SeatGeekInfoGathering(BaseMetric):
                     return False
 
         # ========== AVAILABILITY STATUS ==========
-        
+        # BUG 1 FIX: Use exact equality instead of substring to prevent
+        # "available" matching "unavailable"
         if availability_statuses := query.get("availability_statuses"):
             availability_statuses = [s.lower() for s in availability_statuses]
             info_availability = info.get("availabilityStatus", info.get("info", "")).lower()
-            if info_availability and not any(s in info_availability for s in availability_statuses):
+            if info_availability and info_availability not in availability_statuses:
                 return False
 
         # ========== DATE/TIME FILTERS ==========
@@ -629,13 +775,15 @@ class SeatGeekInfoGathering(BaseMetric):
         
         if is_sold_out:
             if require_available:
+                # User explicitly requires available tickets — reject sold-out
                 if query_dates:
                     if info.get("date") in query_dates:
                         evidences.append(info)
                         return False
                 return False
             else:
-                # Accept sold-out events as valid matches
+                # require_available is False (default) — ACCEPT sold-out events!
+                # Agent found the correct event, so they get full credit
                 if query_dates:
                     if info.get("date") not in query_dates:
                         return False
@@ -786,7 +934,19 @@ def generate_task_config_deterministic(
     timestamp: int | None = None,
     url: str = "https://seatgeek.com",
 ) -> BaseTaskConfig:
-    """Generate deterministic task configuration."""
+    """Generate deterministic task configuration.
+    
+    Args:
+        mode: Task mode ("any" or "all"). Currently accepted for API
+              compatibility but not used for query expansion. All queries
+              are passed through unchanged.
+        task: Task description string.
+        queries: List of query alternatives.
+        location: User location string.
+        timezone: IANA timezone string.
+        timestamp: Optional unix timestamp.
+        url: Starting URL.
+    """
     user_metadata = initialize_user_metadata(timezone, location, timestamp)
     
     eval_config = {
@@ -818,7 +978,7 @@ if __name__ == "__main__":
         }),
         "env": "real",
         "domain": "seatgeek",
-        "l1_category": "entertainment",
+        "l1_category": "e_commerce",
         "l2_category": "sports",
     }
 

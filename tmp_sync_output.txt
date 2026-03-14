@@ -1,0 +1,84 @@
+Fixes applied: 81
+  GT URL [navi_bench/realtor/for_rent_amenities/0]: https://www.realtor.com/apartments/Austin_TX/with_inunitlaundry/beds-2/baths-1/price-na-2000 -> https://www.realtor.com/apartments/Austin_TX/type-apartments/with_inunitlaundry/beds-2/baths-1/price-na-2000
+  Task text [navi_bench/realtor/for_rent_amenities/0]: synced
+  GT URL [navi_bench/realtor/for_rent_amenities/1]: https://www.realtor.com/apartments/Chicago_IL/features-cs/beds-2/price-na-2500 -> https://www.realtor.com/apartments/Chicago_IL/type-apartments/features-cs/beds-2/price-na-2500
+  Task text [navi_bench/realtor/for_rent_amenities/1]: synced
+  GT URL [navi_bench/realtor/for_rent_amenities/2]: https://www.realtor.com/apartments/Miami_FL/with_inunitlaundry/beds-2/baths-2/price-2000-4000 -> https://www.realtor.com/apartments/Miami_FL/type-apartments/with_inunitlaundry/beds-2/baths-2/price-2000-4000
+  Task text [navi_bench/realtor/for_rent_amenities/2]: synced
+  GT URL [navi_bench/realtor/for_rent_amenities/3]: https://www.realtor.com/apartments/Seattle_WA/features-cs/beds-3/baths-2/price-na-3500 -> https://www.realtor.com/apartments/Seattle_WA/type-apartments/features-cs/beds-3/baths-2/price-na-3500
+  Task text [navi_bench/realtor/for_rent_amenities/3]: synced
+  GT URL [navi_bench/realtor/for_rent_basic/0]: https://www.realtor.com/apartments/San-Francisco_CA/beds-2/baths-1/price-na-3000 -> https://www.realtor.com/apartments/San-Francisco_CA/type-apartments/beds-2/baths-1/price-na-3000
+  Task text [navi_bench/realtor/for_rent_basic/0]: synced
+  GT URL [navi_bench/realtor/for_rent_basic/1]: https://www.realtor.com/apartments/New-York_NY/beds-1/price-2000-4000 -> https://www.realtor.com/apartments/New-York_NY/type-apartments/beds-1/price-2000-4000
+  Task text [navi_bench/realtor/for_rent_basic/1]: synced
+  GT URL [navi_bench/realtor/for_rent_basic/2]: https://www.realtor.com/apartments/Los-Angeles_CA/beds-2/baths-2/price-1500-3000 -> https://www.realtor.com/apartments/Los-Angeles_CA/type-apartments/beds-2/baths-2/price-1500-3000
+  Task text [navi_bench/realtor/for_rent_basic/2]: synced
+  GT URL [navi_bench/realtor/for_rent_basic/3]: https://www.realtor.com/apartments/Chicago_IL/beds-3/baths-2/price-na-2500 -> https://www.realtor.com/apartments/Chicago_IL/type-apartments/beds-3/baths-2/price-na-2500
+  Task text [navi_bench/realtor/for_rent_basic/3]: synced
+  GT URL [navi_bench/realtor/for_rent_basic/4]: https://www.realtor.com/apartments/Austin_TX/beds-3/baths-2/price-1500-3000 -> https://www.realtor.com/apartments/Austin_TX/type-apartments/beds-3/baths-2/price-1500-3000
+  Task text [navi_bench/realtor/for_rent_basic/4]: synced
+  GT URL [navi_bench/realtor/for_rent_basic/5]: https://www.realtor.com/apartments/Seattle_WA/beds-2/baths-2/price-na-3500 -> https://www.realtor.com/apartments/Seattle_WA/type-apartments/beds-2/baths-2/price-na-3500
+  Task text [navi_bench/realtor/for_rent_basic/5]: synced
+  GT URL [navi_bench/realtor/for_rent_basic/6]: https://www.realtor.com/apartments/Miami_FL/beds-2/baths-1/price-2000-5000 -> https://www.realtor.com/apartments/Miami_FL/type-apartments/beds-2/baths-1/price-2000-5000
+  Task text [navi_bench/realtor/for_rent_basic/6]: synced
+  GT URL [navi_bench/realtor/for_rent_complex/0]: https://www.realtor.com/apartments/San-Francisco_CA/dog-friendly/beds-2/baths-1/with_inunitlaundry/price-na-4000 -> https://www.realtor.com/apartments/San-Francisco_CA/type-apartments/dog-friendly/with_inunitlaundry/beds-2/baths-1/price-na-4000
+  Task text [navi_bench/realtor/for_rent_complex/0]: synced
+  GT URL [navi_bench/realtor/for_rent_complex/1]: https://www.realtor.com/apartments/Los-Angeles_CA/cat-friendly/features-cs/beds-2/baths-2/price-2000-4000 -> https://www.realtor.com/apartments/Los-Angeles_CA/type-apartments/cat-friendly/features-cs/beds-2/baths-2/price-2000-4000
+  Task text [navi_bench/realtor/for_rent_complex/1]: synced
+  GT URL [navi_bench/realtor/for_rent_complex/2]: https://www.realtor.com/apartments/New-York_NY/dog-friendly/cat-friendly/with_inunitlaundry/beds-2/baths-2/price-na-5000 -> https://www.realtor.com/apartments/New-York_NY/type-apartments/dog-friendly/cat-friendly/with_inunitlaundry/beds-2/baths-2/price-na-5000
+  Task text [navi_bench/realtor/for_rent_complex/2]: synced
+  GT URL [navi_bench/realtor/for_rent_pets/0]: https://www.realtor.com/apartments/Los-Angeles_CA/dog-friendly/beds-2/baths-1/price-na-3000 -> https://www.realtor.com/apartments/Los-Angeles_CA/type-apartments/dog-friendly/beds-2/baths-1/price-na-3000
+  Task text [navi_bench/realtor/for_rent_pets/0]: synced
+  GT URL [navi_bench/realtor/for_rent_pets/1]: https://www.realtor.com/apartments/New-York_NY/cat-friendly/beds-1/baths-1/price-2000-4000 -> https://www.realtor.com/apartments/New-York_NY/type-apartments/cat-friendly/beds-1/baths-1/price-2000-4000
+  Task text [navi_bench/realtor/for_rent_pets/1]: synced
+  GT URL [navi_bench/realtor/for_rent_pets/2]: https://www.realtor.com/apartments/San-Francisco_CA/dog-friendly/cat-friendly/beds-2/price-na-4500 -> https://www.realtor.com/apartments/San-Francisco_CA/type-apartments/dog-friendly/cat-friendly/beds-2/price-na-4500
+  Task text [navi_bench/realtor/for_rent_pets/2]: synced
+  GT URL [navi_bench/realtor/for_rent_pets/3]: https://www.realtor.com/apartments/Denver_CO/dog-friendly/beds-2/baths-2/price-na-2500 -> https://www.realtor.com/apartments/Denver_CO/type-apartments/dog-friendly/beds-2/baths-2/price-na-2500
+  Task text [navi_bench/realtor/for_rent_pets/3]: synced
+  GT URL [navi_bench/realtor/for_sale_advanced/1]: https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/hoa-na-500/type-condo -> https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/type-condo/hoa-500,known
+  Task text [navi_bench/realtor/for_sale_advanced/1]: synced
+  GT URL [navi_bench/realtor/for_sale_advanced/2]: https://www.realtor.com/realestateandhomes-search/Austin_TX/lot-sqft-5000-10000 -> https://www.realtor.com/realestateandhomes-search/Austin_TX/lot-sqft-5000-7500
+  Task text [navi_bench/realtor/for_sale_advanced/2]: synced
+  GT URL [navi_bench/realtor/for_sale_advanced/3]: https://www.realtor.com/realestateandhomes-search/Denver_CO/age-0-10 -> https://www.realtor.com/realestateandhomes-search/Denver_CO/age-10
+  Task text [navi_bench/realtor/for_sale_advanced/3]: synced
+  Task text [navi_bench/realtor/for_sale_advanced/4]: synced
+  Task text [navi_bench/realtor/for_sale_advanced/5]: synced
+  Task text [navi_bench/realtor/for_sale_advanced/6]: synced
+  Task text [navi_bench/realtor/for_sale_complex/0]: synced
+  GT URL [navi_bench/realtor/for_sale_complex/1]: https://www.realtor.com/realestateandhomes-search/Miami_FL/show-new-construction/type-condo/beds-2/baths-2/price-na-800000/hoa-na-600 -> https://www.realtor.com/realestateandhomes-search/Miami_FL/type-condo/beds-2/baths-2/shw-nc/price-na-800000/hoa-500,known
+  Task text [navi_bench/realtor/for_sale_complex/1]: synced
+  Task text [navi_bench/realtor/for_sale_complex/2]: synced
+  Task text [navi_bench/realtor/for_sale_complex/3]: synced
+  GT URL [navi_bench/realtor/for_sale_complex/4]: https://www.realtor.com/realestateandhomes-search/Denver_CO/age-0-5/beds-4/baths-3/type-single-family-home/price-500000-900000 -> https://www.realtor.com/realestateandhomes-search/Denver_CO/type-single-family-home/beds-4/baths-3/age-5/price-500000-900000
+  Task text [navi_bench/realtor/for_sale_complex/4]: synced
+  Task text [navi_bench/realtor/for_sale_complex/5]: synced
+  GT URL [navi_bench/realtor/for_sale_complex/6]: https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-condo/hoa-na-500/beds-2/baths-1/price-na-1200000/dom-14 -> https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-condo/beds-2/baths-1/dom-14/price-na-1200000/hoa-500,known
+  Task text [navi_bench/realtor/for_sale_complex/6]: synced
+  GT URL [navi_bench/realtor/for_sale_complex/7]: https://www.realtor.com/realestateandhomes-search/Austin_TX/type-single-family-home/dom-3/beds-3/baths-2/price-na-600000/sqft-1500-3000 -> https://www.realtor.com/realestateandhomes-search/Austin_TX/type-single-family-home/beds-3/baths-2/sqft-1500-3000/dom-7/price-na-600000
+  Task text [navi_bench/realtor/for_sale_complex/7]: synced
+  Task text [navi_bench/realtor/for_sale_property_type/0]: synced
+  GT URL [navi_bench/realtor/for_sale_property_type/4]: https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-condo/type-townhome -> https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-townhome,condo
+  Task text [navi_bench/realtor/for_sale_property_type/6]: synced
+  Task text [navi_bench/realtor/for_sale_show_flags/0]: synced
+  GT URL [navi_bench/realtor/for_sale_show_flags/1]: https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/show-new-construction -> https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/shw-nc
+  Task text [navi_bench/realtor/for_sale_show_flags/1]: synced
+  Task text [navi_bench/realtor/for_sale_show_flags/3]: synced
+  Task text [navi_bench/realtor/for_sale_show_flags/5]: synced
+  Task text [navi_bench/realtor/for_sale_show_flags/6]: synced
+  GT URL [navi_bench/realtor/for_sale_show_flags/7]: https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/show-new-construction/type-single-family-home -> https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/type-single-family-home/shw-nc
+  Task text [navi_bench/realtor/for_sale_show_flags/7]: synced
+  Task text [navi_bench/realtor/location_types/0]: synced
+  Task text [navi_bench/realtor/location_types/1]: synced
+  GT URL [navi_bench/realtor/location_types/2]: https://www.realtor.com/apartments/60601/beds-2/baths-1/price-na-3000 -> https://www.realtor.com/apartments/60601/type-apartments/beds-2/baths-1/price-na-3000
+  Task text [navi_bench/realtor/open_houses/0]: synced
+  GT URL [navi_bench/realtor/open_houses/1]: https://www.realtor.com/realestateandhomes-search/Denver_CO/show-open-house/beds-2/price-na-800000/type-single-family-home -> https://www.realtor.com/realestateandhomes-search/Denver_CO/beds-2/show-open-house/price-na-800000
+  Task text [navi_bench/realtor/open_houses/1]: synced
+  Task text [navi_bench/realtor/open_houses/2]: synced
+  GT URL [navi_bench/realtor/recently_sold/1]: https://www.realtor.com/realestateandhomes-search/Miami_FL/show-recently-sold/sold-within-30/type-condo/beds-2/price-300000-700000 -> https://www.realtor.com/realestateandhomes-search/Miami_FL/type-condo/beds-2/price-300000-700000/soldwithin-1
+  GT URL [navi_bench/realtor/recently_sold/2]: https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-recently-sold/sold-within-7/beds-3/baths-2/price-na-1500000 -> https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/baths-2/price-na-1500000/soldwithin-1
+  Task text [navi_bench/realtor/recently_sold/2]: synced
+  Task text [navi_bench/realtor/recently_sold/3]: synced
+  GT URL [navi_bench/realtor/recently_sold/4]: https://www.realtor.com/realestateandhomes-search/Chicago_IL/show-recently-sold/sold-within-90/beds-3/baths-2/price-200000-500000/type-single-family-home -> https://www.realtor.com/realestateandhomes-search/Chicago_IL/type-single-family-home/beds-3/baths-2/price-200000-500000/soldwithin-3
+  Task text [navi_bench/realtor/recently_sold/4]: synced
+
+CSV1 and CSV2 are now FULLY SYNCED on GT URLs + task text!

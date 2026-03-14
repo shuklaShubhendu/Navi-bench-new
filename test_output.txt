@@ -1,4 +1,91 @@
-================================================================================
-REALTOR.COM URL VERIFIER — COMPREHENSIVE EDGE CASE TEST SUITE
-Browser-Verified Patterns (Feb 2026)
-================================================================================
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\HP\AppData\Local\Python\pythoncore-3.14-64\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\HP\Desktop\navi-fev
+configfile: pyproject.toml
+plugins: anyio-4.12.0, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 60 items
+
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatGeekVerifierLogic::test_evaluator_initialization PASSED [  1%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatGeekVerifierLogic::test_reset_clears_state PASSED [  3%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatGeekVerifierLogic::test_compute_no_matches PASSED [  5%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatGeekVerifierLogic::test_compute_all_matched PASSED [  6%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatGeekVerifierLogic::test_compute_partial_matches PASSED [  8%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestEventNameMatching::test_event_name_basic_match PASSED [ 10%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestEventNameMatching::test_event_name_no_match PASSED [ 11%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestEventNameMatching::test_event_name_match_via_competitors PASSED [ 13%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestEventNameMatching::test_event_name_match_via_performers PASSED [ 15%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestEventNameMatching::test_event_name_case_insensitive PASSED [ 16%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestEventNameMatching::test_event_name_multiple_alternatives PASSED [ 18%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestCategoryMatching::test_event_category_match PASSED [ 20%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestCategoryMatching::test_event_category_no_match PASSED [ 21%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestCategoryMatching::test_domain_alias PASSED [ 23%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestPriceFiltering::test_max_price_under PASSED [ 25%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestPriceFiltering::test_max_price_over PASSED [ 26%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestPriceFiltering::test_max_price_uses_low_price_fallback PASSED [ 28%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestPriceFiltering::test_max_price_uses_listing_low PASSED [ 30%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestPriceFiltering::test_min_price_filter PASSED [ 31%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestCityMatching::test_city_match PASSED [ 33%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestCityMatching::test_city_no_match PASSED [ 35%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestCityMatching::test_city_missing_in_info PASSED [ 36%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestCityMatching::test_city_match_via_url_city PASSED [ 38%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestCityMatching::test_city_multiple_alternatives PASSED [ 40%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestVenueMatching::test_venue_match PASSED [ 41%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestVenueMatching::test_venue_no_match PASSED [ 43%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatGeekSpecificFilters::test_deal_score_min_pass PASSED [ 45%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatGeekSpecificFilters::test_deal_score_min_fail PASSED [ 46%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatGeekSpecificFilters::test_deal_score_null PASSED [ 48%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatGeekSpecificFilters::test_listing_tags_match PASSED [ 50%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatGeekSpecificFilters::test_listing_tags_no_match PASSED [ 51%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestUrlBasedVerification::test_url_quantity_matching PASSED [ 53%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestUrlBasedVerification::test_url_max_price_matching PASSED [ 55%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestPageTypeRequirement::test_require_page_type_single PASSED [ 56%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestPageTypeRequirement::test_require_page_type_list PASSED [ 58%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestAvailabilityStatus::test_availability_status_filter PASSED [ 60%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestAvailabilityStatus::test_sold_out_with_require_available_false PASSED [ 61%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestAvailabilityStatus::test_sold_out_with_require_available_true PASSED [ 63%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestAvailabilityStatus::test_sold_out_wrong_date PASSED [ 65%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestTicketQuantity::test_min_tickets PASSED [ 66%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestTicketQuantity::test_max_tickets PASSED [ 68%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestTicketQuantity::test_ticket_quantities_exact PASSED [ 70%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatFilters::test_aisle_seat_requirement PASSED [ 71%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatFilters::test_section_filter PASSED [ 73%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatFilters::test_section_match_via_available_sections PASSED [ 75%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatFilters::test_row_filter FAILED [ 76%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestDateTimeMatching::test_date_match PASSED [ 78%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestDateTimeMatching::test_multiple_dates PASSED [ 80%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestDateTimeMatching::test_time_match PASSED [ 81%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestDateTimeMatching::test_no_date_filter PASSED [ 83%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestTaskGeneration::test_random_task_generation PASSED [ 85%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestTaskGeneration::test_deterministic_task_generation PASSED [ 86%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestTaskGeneration::test_random_task_with_seed PASSED [ 88%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestDateHelpers::test_get_next_weekend_dates PASSED [ 90%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestDateHelpers::test_get_upcoming_weekday PASSED [ 91%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestDateHelpers::test_get_upcoming_weekday_is_future PASSED [ 93%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestEvaluatorRepr::test_repr PASSED [ 95%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestCombinedFilters::test_name_city_date_price PASSED [ 96%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestCombinedFilters::test_name_category_venue_aisle PASSED [ 98%]
+navi_bench/seatgeek/test_seatgeek_unit.py::TestCombinedFilters::test_minimal_query_matches_anything PASSED [100%]
+
+================================== FAILURES ===================================
+_______________________ TestSeatFilters.test_row_filter _______________________
+
+self = <seatgeek.test_seatgeek_unit.TestSeatFilters object at 0x000001A447B14180>
+
+    def test_row_filter(self):
+        """Test row matching."""
+        query = {"event_names": ["lakers"], "rows": ["1", "2"]}
+        info_match = {"eventName": "lakers", "row": "1", "info": "available"}
+        info_no_match = {"eventName": "lakers", "row": "15", "info": "available"}
+    
+        assert SeatGeekInfoGathering._check_multi_candidate_query(query, info_match, []) is True
+>       assert SeatGeekInfoGathering._check_multi_candidate_query(query, info_no_match, []) is False
+E       AssertionError: assert True is False
+E        +  where True = _check_multi_candidate_query({'event_names': ['lakers'], 'rows': ['1', '2']}, {'eventName': 'lakers', 'info': 'available', 'row': '15'}, [])
+E        +    where _check_multi_candidate_query = SeatGeekInfoGathering._check_multi_candidate_query
+
+navi_bench\seatgeek\test_seatgeek_unit.py:578: AssertionError
+=========================== short test summary info ===========================
+FAILED navi_bench/seatgeek/test_seatgeek_unit.py::TestSeatFilters::test_row_filter
+======================== 1 failed, 59 passed in 3.33s =========================

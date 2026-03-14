@@ -1,0 +1,211 @@
+================================================================================
+CSV1: 70 rows  |  CSV2: 70 rows
+================================================================================
+
+--- GT URL COMPARISON (70 common tasks) ---
+  Identical URLs: 37/70
+  DIFFERENT URLs: 33
+
+  [navi_bench/realtor/for_rent_amenities/0]
+    CSV1: https://www.realtor.com/apartments/Austin_TX/with_inunitlaundry/beds-2/baths-1/price-na-2000
+    CSV2: https://www.realtor.com/apartments/Austin_TX/type-apartments/with_inunitlaundry/beds-2/baths-1/price-na-2000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_amenities/1]
+    CSV1: https://www.realtor.com/apartments/Chicago_IL/features-cs/beds-2/price-na-2500
+    CSV2: https://www.realtor.com/apartments/Chicago_IL/type-apartments/features-cs/beds-2/price-na-2500
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_amenities/2]
+    CSV1: https://www.realtor.com/apartments/Miami_FL/with_inunitlaundry/beds-2/baths-2/price-2000-4000
+    CSV2: https://www.realtor.com/apartments/Miami_FL/type-apartments/with_inunitlaundry/beds-2/baths-2/price-2000-4000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_amenities/3]
+    CSV1: https://www.realtor.com/apartments/Seattle_WA/features-cs/beds-3/baths-2/price-na-3500
+    CSV2: https://www.realtor.com/apartments/Seattle_WA/type-apartments/features-cs/beds-3/baths-2/price-na-3500
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_basic/0]
+    CSV1: https://www.realtor.com/apartments/San-Francisco_CA/beds-2/baths-1/price-na-3000
+    CSV2: https://www.realtor.com/apartments/San-Francisco_CA/type-apartments/beds-2/baths-1/price-na-3000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_basic/1]
+    CSV1: https://www.realtor.com/apartments/New-York_NY/beds-1/price-2000-4000
+    CSV2: https://www.realtor.com/apartments/New-York_NY/type-apartments/beds-1/price-2000-4000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_basic/2]
+    CSV1: https://www.realtor.com/apartments/Los-Angeles_CA/beds-2/baths-2/price-1500-3000
+    CSV2: https://www.realtor.com/apartments/Los-Angeles_CA/type-apartments/beds-2/baths-2/price-1500-3000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_basic/3]
+    CSV1: https://www.realtor.com/apartments/Chicago_IL/beds-3/baths-2/price-na-2500
+    CSV2: https://www.realtor.com/apartments/Chicago_IL/type-apartments/beds-3/baths-2/price-na-2500
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_basic/4]
+    CSV1: https://www.realtor.com/apartments/Austin_TX/beds-3/baths-2/price-1500-3000
+    CSV2: https://www.realtor.com/apartments/Austin_TX/type-apartments/beds-3/baths-2/price-1500-3000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_basic/5]
+    CSV1: https://www.realtor.com/apartments/Seattle_WA/beds-2/baths-2/price-na-3500
+    CSV2: https://www.realtor.com/apartments/Seattle_WA/type-apartments/beds-2/baths-2/price-na-3500
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_basic/6]
+    CSV1: https://www.realtor.com/apartments/Miami_FL/beds-2/baths-1/price-2000-5000
+    CSV2: https://www.realtor.com/apartments/Miami_FL/type-apartments/beds-2/baths-1/price-2000-5000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_complex/0]
+    CSV1: https://www.realtor.com/apartments/San-Francisco_CA/dog-friendly/beds-2/baths-1/with_inunitlaundry/price-na-4000
+    CSV2: https://www.realtor.com/apartments/San-Francisco_CA/type-apartments/dog-friendly/with_inunitlaundry/beds-2/baths-1/price-na-4000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_complex/1]
+    CSV1: https://www.realtor.com/apartments/Los-Angeles_CA/cat-friendly/features-cs/beds-2/baths-2/price-2000-4000
+    CSV2: https://www.realtor.com/apartments/Los-Angeles_CA/type-apartments/cat-friendly/features-cs/beds-2/baths-2/price-2000-4000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_complex/2]
+    CSV1: https://www.realtor.com/apartments/New-York_NY/dog-friendly/cat-friendly/with_inunitlaundry/beds-2/baths-2/price-na-5000
+    CSV2: https://www.realtor.com/apartments/New-York_NY/type-apartments/dog-friendly/cat-friendly/with_inunitlaundry/beds-2/baths-2/price-na-5000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_pets/0]
+    CSV1: https://www.realtor.com/apartments/Los-Angeles_CA/dog-friendly/beds-2/baths-1/price-na-3000
+    CSV2: https://www.realtor.com/apartments/Los-Angeles_CA/type-apartments/dog-friendly/beds-2/baths-1/price-na-3000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_pets/1]
+    CSV1: https://www.realtor.com/apartments/New-York_NY/cat-friendly/beds-1/baths-1/price-2000-4000
+    CSV2: https://www.realtor.com/apartments/New-York_NY/type-apartments/cat-friendly/beds-1/baths-1/price-2000-4000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_pets/2]
+    CSV1: https://www.realtor.com/apartments/San-Francisco_CA/dog-friendly/cat-friendly/beds-2/price-na-4500
+    CSV2: https://www.realtor.com/apartments/San-Francisco_CA/type-apartments/dog-friendly/cat-friendly/beds-2/price-na-4500
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_rent_pets/3]
+    CSV1: https://www.realtor.com/apartments/Denver_CO/dog-friendly/beds-2/baths-2/price-na-2500
+    CSV2: https://www.realtor.com/apartments/Denver_CO/type-apartments/dog-friendly/beds-2/baths-2/price-na-2500
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/for_sale_advanced/1]
+    CSV1: https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/hoa-na-500/type-condo
+    CSV2: https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/type-condo/hoa-500,known
+
+  [navi_bench/realtor/for_sale_advanced/2]
+    CSV1: https://www.realtor.com/realestateandhomes-search/Austin_TX/lot-sqft-5000-10000
+    CSV2: https://www.realtor.com/realestateandhomes-search/Austin_TX/lot-sqft-5000-7500
+    FILTER VALUE DIFF [lot]: '5000-10000' vs '5000-7500'
+
+  [navi_bench/realtor/for_sale_advanced/3]
+    CSV1: https://www.realtor.com/realestateandhomes-search/Denver_CO/age-0-10
+    CSV2: https://www.realtor.com/realestateandhomes-search/Denver_CO/age-10
+    FILTER VALUE DIFF [age]: '0-10' vs '10'
+
+  [navi_bench/realtor/for_sale_complex/1]
+    CSV1: https://www.realtor.com/realestateandhomes-search/Miami_FL/show-new-construction/type-condo/beds-2/baths-2/price-na-800000/hoa-na-600
+    CSV2: https://www.realtor.com/realestateandhomes-search/Miami_FL/type-condo/beds-2/baths-2/shw-nc/price-na-800000/hoa-500,known
+    FILTER VALUE DIFF [hoa]: 'na-600' vs 'na-500'
+
+  [navi_bench/realtor/for_sale_complex/4]
+    CSV1: https://www.realtor.com/realestateandhomes-search/Denver_CO/age-0-5/beds-4/baths-3/type-single-family-home/price-500000-900000
+    CSV2: https://www.realtor.com/realestateandhomes-search/Denver_CO/type-single-family-home/beds-4/baths-3/age-5/price-500000-900000
+    FILTER VALUE DIFF [age]: '0-5' vs '5'
+
+  [navi_bench/realtor/for_sale_complex/6]
+    CSV1: https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-condo/hoa-na-500/beds-2/baths-1/price-na-1200000/dom-14
+    CSV2: https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-condo/beds-2/baths-1/dom-14/price-na-1200000/hoa-500,known
+
+  [navi_bench/realtor/for_sale_complex/7]
+    CSV1: https://www.realtor.com/realestateandhomes-search/Austin_TX/type-single-family-home/dom-3/beds-3/baths-2/price-na-600000/sqft-1500-3000
+    CSV2: https://www.realtor.com/realestateandhomes-search/Austin_TX/type-single-family-home/beds-3/baths-2/sqft-1500-3000/dom-7/price-na-600000
+    FILTER VALUE DIFF [days-on-market]: '3' vs '7'
+
+  [navi_bench/realtor/for_sale_property_type/4]
+    CSV1: https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-condo/type-townhome
+    CSV2: https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/type-townhome,condo
+
+  [navi_bench/realtor/for_sale_show_flags/1]
+    CSV1: https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/show-new-construction
+    CSV2: https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/shw-nc
+
+  [navi_bench/realtor/for_sale_show_flags/7]
+    CSV1: https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/show-new-construction/type-single-family-home
+    CSV2: https://www.realtor.com/realestateandhomes-search/Phoenix_AZ/type-single-family-home/shw-nc
+
+  [navi_bench/realtor/location_types/2]
+    CSV1: https://www.realtor.com/apartments/60601/beds-2/baths-1/price-na-3000
+    CSV2: https://www.realtor.com/apartments/60601/type-apartments/beds-2/baths-1/price-na-3000
+    FILTERS ONLY IN CSV2: type=apartments
+
+  [navi_bench/realtor/open_houses/1]
+    CSV1: https://www.realtor.com/realestateandhomes-search/Denver_CO/show-open-house/beds-2/price-na-800000/type-single-family-home
+    CSV2: https://www.realtor.com/realestateandhomes-search/Denver_CO/beds-2/show-open-house/price-na-800000
+    FILTERS ONLY IN CSV1: type=single-family-home
+
+  [navi_bench/realtor/recently_sold/1]
+    CSV1: https://www.realtor.com/realestateandhomes-search/Miami_FL/show-recently-sold/sold-within-30/type-condo/beds-2/price-300000-700000
+    CSV2: https://www.realtor.com/realestateandhomes-search/Miami_FL/type-condo/beds-2/price-300000-700000/soldwithin-1
+    FILTERS ONLY IN CSV1: show-recently-sold=true
+
+  [navi_bench/realtor/recently_sold/2]
+    CSV1: https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/show-recently-sold/sold-within-7/beds-3/baths-2/price-na-1500000
+    CSV2: https://www.realtor.com/realestateandhomes-search/San-Francisco_CA/beds-3/baths-2/price-na-1500000/soldwithin-1
+    FILTERS ONLY IN CSV1: show-recently-sold=true
+    FILTER VALUE DIFF [sold-within]: '7' vs '30'
+
+  [navi_bench/realtor/recently_sold/4]
+    CSV1: https://www.realtor.com/realestateandhomes-search/Chicago_IL/show-recently-sold/sold-within-90/beds-3/baths-2/price-200000-500000/type-single-family-home
+    CSV2: https://www.realtor.com/realestateandhomes-search/Chicago_IL/type-single-family-home/beds-3/baths-2/price-200000-500000/soldwithin-3
+    FILTERS ONLY IN CSV1: show-recently-sold=true
+
+--- TASK TEXT COMPARISON ---
+  [navi_bench/realtor/for_rent_amenities/0]
+    CSV1: Find apartments with in-unit laundry in Austin, TX with 2+ bedrooms, 1+ bathroom, under $2,000/month.
+    CSV2: Find apartments for rent with in-unit laundry in Austin, TX with 2+ bedrooms, 1+ bathroom, under $2,000/month.
+  [navi_bench/realtor/for_rent_amenities/1]
+    CSV1: Search for apartments with a pool in Chicago, IL with 2+ bedrooms under $2,500/month.
+    CSV2: Search apartments for rent with a pool in Chicago, IL with 2+ bedrooms under $2,500/month.
+  [navi_bench/realtor/for_rent_amenities/2]
+    CSV1: Find apartments with in-unit laundry in Miami, FL with 2+ bedrooms, 2+ bathrooms, priced $2,000-$4,000/month.
+    CSV2: Find apartments for rent with in-unit laundry in Miami, FL with 2+ bedrooms, 2+ bathrooms, priced $2,000-$4,000/month.
+  [navi_bench/realtor/for_rent_amenities/3]
+    CSV1: Search for apartments with a pool in Seattle, WA with 3+ bedrooms, 2+ bathrooms, under $3,500/month.
+    CSV2: Search apartments for rent with a pool in Seattle, WA with 3+ bedrooms, 2+ bathrooms, under $3,500/month.
+  [navi_bench/realtor/for_rent_basic/0]
+    CSV1: Find apartments in San Francisco, CA with 2+ bedrooms, 1+ bathroom, under $3,000/month.
+    CSV2: Find apartments for rent in San Francisco, CA with 2+ bedrooms, 1+ bathroom, under $3,000/month.
+  [navi_bench/realtor/for_rent_basic/1]
+    CSV1: Search for apartments in New York, NY with 1+ bedroom priced $2,000-$4,000/month.
+    CSV2: Search for apartments for rent in New York, NY with 1+ bedroom priced $2,000-$4,000/month.
+  [navi_bench/realtor/for_rent_basic/2]
+    CSV1: Find apartments in Los Angeles, CA with 2+ bedrooms, 2+ bathrooms, priced $1,500-$3,000/month.
+    CSV2: Find apartments in Los Angeles, CA for rent with 2+ bedrooms, 2+ bathrooms, priced $1,500-$3,000/month.
+  [navi_bench/realtor/for_rent_basic/3]
+    CSV1: Search for apartments in Chicago, IL with 3+ bedrooms, 2+ bathrooms, under $2,500/month.
+    CSV2: Search apartments for rent in Chicago, IL with 3+ bedrooms, 2+ bathrooms, under $2,500/month.
+  [navi_bench/realtor/for_rent_basic/4]
+    CSV1: Find apartments in Austin, TX with 3+ bedrooms, 2+ bathrooms, priced $1,500-$3,000/month.
+    CSV2: Find apartments for rent in Austin, TX with 3+ bedrooms, 2+ bathrooms, priced $1,500-$3,000/month.
+  [navi_bench/realtor/for_rent_basic/5]
+    CSV1: Search for apartments in Seattle, WA with 2+ bedrooms, 2+ bathrooms, under $3,500/month.
+    CSV2: Search apartments for rent in Seattle, WA with 2+ bedrooms, 2+ bathrooms, under $3,500/month.
+  Task text diffs: 48/70
+
+--- CROSS-MATCH: CSV2 self-match ---
+  Self-match: 70/70 PASS
+
+--- PATTERN COVERAGE: Can verifier parse every CSV2 URL segment? ---
+  All filter keys used in CSV2: age, baths, beds, cat-friendly, days-on-market, dog-friendly, features, hoa, lot, price, radius, show-3d-tours, show-55-plus, show-foreclosure, show-new-construction, show-open-house, show-price-reduced, show-recently-sold, show-virtual-tours, sold-within, sqft, type, with_inunitlaundry
+
+================================================================================
+COMPARISON COMPLETE
+================================================================================

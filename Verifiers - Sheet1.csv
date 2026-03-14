@@ -1,0 +1,66 @@
+DOMAIN NAME,VERIFIER TYPE,LINKS CHECKED,FILTERS APPLIED ,POSSIBLE DATA EXTRACTION USING URL,SUMMARY
+EBAY,URL Based ,https://www.ebay.com/sch/i.html?_udlo=350&_fsrp=1&LH_FS=1&_from=R40&Size=Small&_nkw=hand+bag&_sacat=0&_udhi=750&Brand=PRADA&Style=Shoulder%2520Bag&Occasion=Party%252FCocktail&_oaa=1&_dcat=169291&LH_BIN=1&rt=nc&LH_FR=1,"Filters applied are-
+1. Style [Shoulder bag]
+2. Size [Small]
+3. Brand [Prada]
+4. Ocassion [Party/ Cocktail]
+5. Price range
+6. Buying Format [Buy it now]
+7. Show only [Free Returns]
+8. Exclusive Deals [Private deals]
+9. Category","Min price, Max price, Category, Brand, Style, Occasion, size can be extrated using URL",
+ETSY,URL Based ,https://www.etsy.com/search/bags-and-purses/handbags/clutches-and-evening-bags?q=hand%20bag&instant_download=false&explicit=1&category_path=132%2C156%2C157&free_shipping=true&is_discounted=true&is_star_seller=true&custom_price=1&min=3000&max=5000&gift_wrap=true,"Filters applied for this link are-
+1. Category
+2. Price Range
+3. Special Offers [free delivery, on sale]
+4. Etsy's best [Start Seller]
+5. Ordering options [can be gifted]",Data for all the filters applied can be extracetd using the URL,"As all the values for all the applied filters can be extracted from URL, 
+It summarizes- Domain ETSY follows URL based Verifier"
+KAYAK,URL Based ,"https://www.kayak.co.in/hotels/New-Delhi,National-Capital-Territory-of-India,India-c32821/2026-04-12/2026-04-14/2adults;map?ucs=hdhhxu&sort=rank_a&fs=stars=4;price=2680-14718;extendedrating=great;freebies=freeinternet;amenities=ac;deals=privatedeals;property-type=resort","Filters applied for this link are-
+1. Price range
+2. Freebies [free internet]
+3.Amenities [Air-conditioned]
+4. Hotel class [4*]
+5. Review Score [8+]
+6. Status [for sale]
+7. Type of stay [resort]
+8. Exclusive Deals [Private deals]
+",Data for all the filters applied can be extracetd using the URL,"As all the values for all the applied filters can be extracted from URL, 
+It summarizes- Domain Kayak follows URL based Verifier"
+MERCARI,URL + Scrapper,https://www.mercari.com/search/?brandIds=3908&categoryIds=252&itemConditions=1&itemStatuses=1&keyword=hand%20bags&maxPrice=19900&minPrice=10000&shippingPayerIds=2&withDealsOnly=true,"Filters applied for this link are-
+1. Price range
+2. Deals
+3. Free Shipping
+4. Brand
+5. Condition 
+6. Status [for sale]","Max Price, Min price, free shipping, deals can be extracted using URL","Data like Price range, free shipping and deals can be directly accessed from the URL. Whereas, URL contains ids for applied brand and category which requires Scapping.
+it Summarizes- Mercari follows URL + Scapper based verifier"
+TRAINLINE,Scrapper,https://www.thetrainline.com/book/results?journeySearchType=single&origin=urn%3Atrainline%3Ageneric%3Aloc%3A182gb&destination=urn%3Atrainline%3Ageneric%3Aloc%3AEDB9328gb&outwardDate=2026-03-10T16%3A30%3A39&outwardDateType=departAfter&selectedTab=train&splitSave=true&lang=en-us&dpiCookieId=IE5L1BS3OUMQE391R8OOBOZAQ&partnershipType=accommodation&partnershipSelection=true&selectedOutward=Vops1TVzUrQ%3D%3AGoBCt3rdUcM%3D,"The link searches for train from start to end destination with dates (Out - Return) with No.of People (adults, children)",No information can be scrapped using URL,"As no direct information can be extracted using URL 
+It Summarizes-Trainline follows Scrapper based verifier"
+BOOKING,URL+ Scrapper,https://www.booking.com/searchresults.html?label=en-in-booking-desktop-CmH43mrsjzqEEFQPgVycoAS652796016141%3Apl%3Ata%3Ap1%3Ap2%3Aac%3Aap%3Aneg%3Afi%3Atikwd-65526620%3Alp9302986%3Ali%3Adec%3Adm&aid=2311236&ss=New+Delhi&ssne=New+Delhi&ssne_untouched=New+Delhi&lang=en-us&src=index&dest_id=-2106102&dest_type=city&checkin=2026-03-10&checkout=2026-03-11&group_adults=2&no_rooms=1&group_children=0&nflt=class%3D5%3Bhotelfacility%3D107%3Bht_id%3D204%3Bprice%3DINR-min-14500-1%3Breview_score%3D80%3Bfc%3D5%3Bht_id%3D206%3Bht_id%3D213%3Bentire_place_bedroom_count%3D1%3Bmealplan%3D999%3Broomfacility%3D17%3Broomfacility%3D8,"Filters applied are-
+1. Property Type
+2. Meals [kitchen facilities]
+3. Facilities [Free Wifi]
+4. Room Facilities [Balcony, TV]
+5. Property Rating [5 star]
+6. Review Score [Very good]
+7. Reservation policy [No prepayment]","Check in date, check out date, group of adults, group of children, no of rooms can be extracted from the URL.
+Whereas, all the other filter data needd to be scrapped.","Information like destination, check in & check out date, group of children & adults, no. of room can be extracted using URL
+Whereas, data for applied filter can not be extracted directly from the URL.
+It Summarizes- Booking follows URL + Scrapper based Verifier."
+ROME2RIO,URL+ Scrapper,https://www.rome2rio.com/map/Nagpur/New-Delhi,"Filters applied are-
+1. Price range
+2. Guest ratings [9+]
+3. Class [4*]
+4. Amenities [wifi, fitness centre]
+5. Property Type[Hotel]",Travel start and end location can be extracted through URL,"Since the applied filters do not update the URL, filter data cannot be extracted from it. Only the travel start and end locations are available in the URL.
+It Summarizes- Rome2Rio follows URL+Scrapper Verifier "
+IKEA,Scrapper,https://www.ikea.com/in/en/search/?q=lights&filters=f-availability%3AONLINE_SELLABLE%2Cf-materials%3A47660%2Cf-price-buckets%3APRICE_200000_9223372036854775807%2Cf-ratings%3A4%2Cf-series%3A38980%2Cf-subcategories%3Ali002%2Cf-type%3A54596,"Filters applied are-
+1. Category [Lamps]
+2. Type [General Light]
+3. Material [Glass]
+4. Price [2000+]
+5. Availability [Buyable Online]
+6. Customer rating [4]
+7. Series [Nymane Series]",No information related to applied filters can be scrapped using URL,"As data for the applied filter can not be directly applied from the URL
+It Summarizes- IKEA follows Scapper based Verifier"

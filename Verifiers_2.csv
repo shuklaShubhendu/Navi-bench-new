@@ -1,0 +1,29 @@
+DOMAIN NAME,VERIFIER TYPE,LINKS CHECKED,FILTERS APPLIED,POSSIBLE DATA EXTRACTION USING URL,SUMMARY
+SKYSCANNER,URL + Scrapper,https://www.skyscanner.com/transport/flights/nyca/lond/260410/260417/,"Filters applied are-
+1. Departure Time
+2. Airlines","Departure and Return dates, and cities can be extracted from the URL.","Whereas, applied filter data cannot be explicitly extracted directly from the URL.
+It Summarizes- Skyscanner follows URL + Scrapper based Verifier."
+EXPEDIA,URL + Scrapper,https://www.expedia.com/Hotel-Search?destination=Las%20Vegas&d1=2026-04-01&d2=2026-04-02&adults=2&rooms=1,"Filters applied are-
+1. Property Type
+2. Star Rating","Destination, check-in, check-out dates, and number of guests/rooms can be extracted from the URL.","Data for complex applied filters cannot be reliably extracted without scraping.
+It Summarizes- Expedia follows URL + Scrapper based Verifier."
+STOCKX,URL Based,https://stockx.com/search?s=sneakers&size_types=men,"Filters applied are-
+1. Keyword
+2. Size","Keyword and selected size type can be extracted using the URL.","As all the values for primary search and filters can be extracted from the URL,
+It Summarizes- Domain StockX follows URL based Verifier."
+PRICELINE,Scrapper,https://www.priceline.com/relax/search/hotel/,"Filters applied are-
+1. Location
+2. Amenities",No direct information can be reliably extracted without resolving internal opaque IDs.,"As core data like location IDs are opaque and filters are not clearly in the URL,
+It Summarizes- Priceline follows Scrapper based Verifier."
+HOME DEPOT,Scrapper,https://www.homedepot.com/b/Lighting/N-5yc1vZbvn5,"Filters applied are-
+1. Category
+2. Material",No information related to applied filters can be interpreted from the URL,"As data for the applied filters and categories are opaque internal IDs (e.g., N-xxxx) in the URL,
+It Summarizes- Home Depot follows Scrapper based Verifier."
+TRIPADVISOR,Scrapper,https://www.tripadvisor.com/Hotels-g186338-London-Hotels.html,"Filters applied are-
+1. Location
+2. Star Rating",No direct generic information can be extracted because location uses an opaque ID (g186338),"As location is an internal ID and filters do not consistently appear as readable text in the core URL,
+It Summarizes- Tripadvisor follows Scrapper based Verifier."
+TRAINLINE,Scrapper,https://www.thetrainline.com/book/results?origin=urn%3Atrainline%3Ageneric%3Aloc%3A182gb,"Filters applied are-
+1. Origin
+2. Destination",No readable information can be extracted using URL,"As location uses opaque URNs and no direct readable information can be extracted using the URL natively,
+It Summarizes- Trainline follows Scrapper based verifier."

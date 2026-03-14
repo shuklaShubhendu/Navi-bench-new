@@ -1,0 +1,44 @@
+======================================================================
+REVIEWER CONCERN VERIFICATION
+======================================================================
+
+1. shw-nc parsing:
+   shw-nc -> show-new-construction=true  PASS
+
+2. hoa-500,known parsing:
+   hoa-500,known -> hoa=na-500  PASS
+
+3. soldwithin-N parsing:
+   soldwithin-1 -> sold-within=30 (expect 30)  PASS
+   soldwithin-3 -> sold-within=90 (expect 90)  PASS
+
+4. soldwithin implies sold (equivalence matching):
+   GT(soldwithin-1) vs Agent(show-recently-sold/sold-within-30): score=1.0  PASS
+   GT(soldwithin-1) vs Agent(/sold-homes/ + sold-within-30): score=1.0  PASS
+
+5. with_petsallowed check:
+   realtor_benchmark_tasks.csv: No with_petsallowed found - OK
+   realtor_benchmark_tasks2.csv: No with_petsallowed found - OK
+   Verifier parses with_petsallowed: filters={'with_petsallowed': 'true'}
+
+6. type-apartments stripping in rental comparison:
+   GT(type-apartments) vs Agent(no type): score=1.0  PASS
+   GT(no type) vs Agent(type-apartments): score=1.0  PASS
+
+7. type-townhome,condo vs type-condo/type-townhome:
+   GT(type-townhome,condo) vs Agent(type-condo/type-townhome): score=1.0  PASS
+
+8. age single-value normalization:
+   GT(age-10) vs Agent(age-0-10): score=1.0  PASS
+
+9. Garbage row check:
+   realtor_benchmark_tasks.csv: 70 rows, empty task_ids at indices: none
+   realtor_benchmark_tasks2.csv: 70 rows, empty task_ids at indices: none
+
+10. Full self-match:
+   realtor_benchmark_tasks.csv: 70/70 (ALL PASS)
+   realtor_benchmark_tasks2.csv: 70/70 (ALL PASS)
+
+======================================================================
+DONE
+======================================================================
